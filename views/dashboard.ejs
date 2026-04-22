@@ -4,7 +4,7 @@
     <title>Dashboard</title>
     <style>
         body {
-            font-family: Arial;
+            font-family: Arial, sans-serif;
             background: linear-gradient(to right, #eef2f7, #d9e4f5);
             text-align: center;
             padding-top: 50px;
@@ -33,11 +33,18 @@
         }
         .server {
             margin-top: 10px;
-            padding: 8px;
+            padding: 10px;
             background: #e3f2fd;
             border-radius: 6px;
             font-weight: bold;
             color: #0d47a1;
+        }
+        .time {
+            margin-top: 10px;
+            padding: 8px;
+            background: #fff3cd;
+            border-radius: 6px;
+            font-size: 14px;
         }
         .note {
             margin-top: 15px;
@@ -52,23 +59,32 @@
         <h2>Welcome <%= user %></h2>
         <p>This is your dashboard</p>
 
+        <!-- ✅ Application status -->
         <div class="status">
             Application Status: Running ✅
         </div>
 
-        <!-- ✅ REAL SERVER INFO -->
+        <!-- ✅ Server identity (VERY IMPORTANT) -->
         <div class="server">
             Handled By: <%= server %>
         </div>
 
+        <!-- ✅ Dynamic time (extra improvement) -->
+        <div class="time">
+            Request Time: <%= new Date().toLocaleString() %>
+        </div>
+
+        <!-- ✅ Architecture info -->
         <div class="info">
             <p><b>Architecture:</b> Multi-Region Deployment</p>
             <p><b>High Availability:</b> Enabled</p>
             <p><b>Load Balancing:</b> Active</p>
         </div>
 
+        <!-- ✅ Explanation note -->
         <div class="note">
-            If one server fails, traffic will automatically be routed to another server via load balancer.
+            This request was served by one of multiple backend instances. 
+            If one server fails, traffic is automatically routed to another server via the load balancer.
         </div>
     </div>
 </body>

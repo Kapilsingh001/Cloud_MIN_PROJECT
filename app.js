@@ -9,11 +9,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // set view engine
 app.set('view engine', 'ejs');
 
-// ✅ ADD THIS (important for multi-server)
+// environment variables
 const PORT = process.env.PORT || 3000;
 const SERVER_NAME = process.env.SERVER_NAME || "Server";
-
-// routes
 
 // login page
 app.get('/', (req, res) => {
@@ -28,18 +26,18 @@ app.post('/login', (req, res) => {
 
 // dashboard
 app.get('/dashboard/:user', (req, res) => {
-    res.render('dashboard', { 
+    res.render('dashboard', {
         user: req.params.user,
-        server: SERVER_NAME   // ✅ pass server name
+        server: SERVER_NAME
     });
 });
 
-// ✅ health check (important for load balancer)
+// health check
 app.get('/health', (req, res) => {
     res.status(200).send("OK");
 });
 
-// server start
+// start server
 app.listen(PORT, () => {
-    console.log(`${SERVER_NAME} running on http://localhost:${PORT}`);
+    console.log(`${SERVER_NAME} running on port ${PORT}`);
 });
