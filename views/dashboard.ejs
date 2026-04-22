@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: linear-gradient(to right, #eef2f7, #d9e4f5);
+            text-align: center;
+            padding-top: 50px;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            margin: auto;
+            width: 350px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .status {
+            margin-top: 10px;
+            padding: 8px;
+            background: #e6ffed;
+            border-radius: 6px;
+            color: green;
+            font-weight: bold;
+        }
+        .info {
+            margin-top: 10px;
+            padding: 8px;
+            background: #f1f1f1;
+            border-radius: 6px;
+        }
+        .server {
+            margin-top: 10px;
+            padding: 8px;
+            background: #e3f2fd;
+            border-radius: 6px;
+            font-weight: bold;
+            color: #0d47a1;
+        }
+        .note {
+            margin-top: 15px;
+            font-size: 13px;
+            color: #555;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h2>Welcome <%= user %></h2>
+        <p>This is your dashboard</p>
+
+        <div class="status">
+            Application Status: Running ✅
+        </div>
+
+        <!-- ✅ REAL SERVER INFO -->
+        <div class="server">
+            Handled By: <%= server %>
+        </div>
+
+        <div class="info">
+            <p><b>Architecture:</b> Multi-Region Deployment</p>
+            <p><b>High Availability:</b> Enabled</p>
+            <p><b>Load Balancing:</b> Active</p>
+        </div>
+
+        <div class="note">
+            If one server fails, traffic will automatically be routed to another server via load balancer.
+        </div>
+    </div>
+</body>
+</html>
