@@ -1,73 +1,833 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Login</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(to right, #4facfe, #00f2fe);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .box {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            text-align: center;
-            width: 300px;
-        }
-        h2 {
-            margin-bottom: 15px;
-        }
-        input {
-            padding: 10px;
-            margin: 10px 0;
-            width: 90%;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        button {
-            padding: 10px 20px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            width: 100%;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        .info {
-            margin-top: 10px;
-            font-size: 13px;
-            color: #555;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Cloud MIN · Login</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{
+  height:100%;font-family:'DM Sans',sans-serif;
+  background:#0d0a1a;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+  min-height:100vh;
+}
+
+/* ── Background canvas ── */
+#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* ── Sakura petals ── */
+.petal{
+  position:fixed;pointer-events:none;z-index:1;
+  width:12px;height:12px;
+  border-radius:50% 0 50% 0;
+  background:linear-gradient(135deg,#ffb7c5,#ff85a1);
+  opacity:0;
+  animation:fall linear infinite;
+}
+@keyframes fall{
+  0%{transform:translateY(-20px) rotate(0deg);opacity:.8}
+  100%{transform:translateY(110vh) rotate(720deg);opacity:0}
+}
+
+/* ── Toast ── */
+.toast{
+  position:fixed;top:22px;left:50%;
+  transform:translateX(-50%) translateY(-80px);
+  background:rgba(20,10,40,.95);border:1px solid rgba(255,150,200,.25);
+  border-radius:10px;padding:11px 18px;
+  color:#ffe4f0;font-size:13px;white-space:nowrap;
+  display:flex;align-items:center;gap:8px;
+  transition:transform .4s cubic-bezier(.22,1,.36,1),opacity .4s;
+  opacity:0;z-index:200;
+  box-shadow:0 8px 32px rgba(255,100,180,.15);
+}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* ── Page ── */
+.page{
+  position:relative;z-index:10;
+  display:flex;align-items:flex-end;gap:0;
+  animation:pageIn .9s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes pageIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Character wrap ── */
+.char-wrap{
+  position:relative;
+  width:210px;flex-shrink:0;
+  align-self:flex-end;
+  margin-right:-22px;
+  z-index:2;
+}
+.char-svg{
+  width:210px;
+  filter:drop-shadow(0 12px 32px rgba(255,100,180,.4));
+  animation:charFloat 3.5s ease-in-out infinite;
+}
+@keyframes charFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+
+/* Shadow */
+.char-shadow{
+  width:100px;height:12px;margin:0 auto;
+  background:radial-gradient(ellipse,rgba(255,100,180,.3) 0%,transparent 70%);
+  animation:shadowFloat 3.5s ease-in-out infinite;
+}
+@keyframes shadowFloat{0%,100%{transform:scaleX(1);opacity:.6}50%{transform:scaleX(.75);opacity:.25}}
+
+/* eyes react */
+.eyes-normal{display:block}
+.eyes-shy{display:none}
+.eyes-happy{display:none}
+body.peeking .eyes-normal{display:none}
+body.peeking .eyes-shy{display:block}
+body.success-state .eyes-normal{display:none}
+body.success-state .eyes-happy{display:block}
+
+/* blush */
+.blush{opacity:0;transition:opacity .5s}
+body.peeking .blush{opacity:1}
+body.success-state .blush{opacity:1}
+
+/* ── Login card ── */
+.login-card{
+  background:rgba(15,8,35,.82);
+  border:1px solid rgba(255,150,200,.18);
+  border-radius:22px;
+  padding:38px 34px 34px;
+  width:360px;
+  backdrop-filter:blur(28px);
+  position:relative;overflow:hidden;
+  box-shadow:
+    0 40px 80px rgba(0,0,0,.6),
+    0 0 0 1px rgba(255,150,200,.06) inset,
+    0 0 60px rgba(255,100,180,.06);
+  z-index:1;
+}
+/* top shimmer */
+.login-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,130,180,.7) 35%,rgba(200,100,255,1) 50%,rgba(255,130,180,.7) 65%,transparent);
+  animation:shim 4s ease-in-out infinite;
+}
+@keyframes shim{0%,100%{opacity:.3}50%{opacity:1}}
+
+/* card inner glow */
+.login-card::after{
+  content:'';position:absolute;bottom:-60px;right:-60px;
+  width:180px;height:180px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,100,180,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+.login-title{color:#fff5ff;font-size:21px;font-weight:700;letter-spacing:-.4px;margin-bottom:3px}
+.login-sub{color:rgba(255,200,230,.38);font-size:12.5px;margin-bottom:28px}
+
+/* ── Fields ── */
+.field{margin-bottom:14px}
+.field-label{
+  display:block;color:rgba(255,180,220,.5);
+  font-size:10.5px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;
+  margin-bottom:7px;transition:color .2s;
+}
+.field:focus-within .field-label{color:#f472b6}
+.input-row{position:relative}
+.input-ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);pointer-events:none}
+.input-ico svg{width:15px;height:15px;stroke:rgba(255,180,220,.3);transition:stroke .2s}
+.field:focus-within .input-ico svg{stroke:#f472b6}
+
+.field-input{
+  width:100%;height:47px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,150,200,.14);
+  border-radius:12px;
+  color:#fff5ff;font-size:14px;font-family:'DM Sans',sans-serif;
+  padding:0 40px 0 40px;
+  outline:none;
+  transition:border-color .2s,background .2s,box-shadow .2s;
+}
+.field-input::placeholder{color:rgba(255,180,220,.22)}
+.field-input:focus{
+  border-color:#c084fc;
+  background:rgba(192,132,252,.07);
+  box-shadow:0 0 0 3px rgba(192,132,252,.14);
+}
+.field-input.error{border-color:#fb7185;box-shadow:0 0 0 3px rgba(251,113,133,.1)}
+.field-input.success{border-color:#4ade80;box-shadow:0 0 0 3px rgba(74,222,128,.1)}
+
+.field-msg{font-size:11px;margin-top:4px;min-height:15px;padding-left:3px;transition:all .2s}
+.field-msg.err{color:#fb7185}.field-msg.ok{color:#86efac}
+
+/* eye toggle */
+.eye-btn{
+  position:absolute;right:11px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;padding:4px;
+  color:rgba(255,180,220,.3);transition:color .2s;
+}
+.eye-btn:hover{color:rgba(255,180,220,.8)}
+.eye-btn svg{width:15px;height:15px;display:block}
+
+/* strength */
+.s-bar-wrap{margin-top:5px;display:none}
+.s-bar-wrap.show{display:block}
+.s-bar-bg{height:3px;background:rgba(255,255,255,.07);border-radius:10px;overflow:hidden}
+.s-bar-fill{height:100%;border-radius:10px;width:0;transition:width .35s,background .35s}
+
+/* ── Check row ── */
+.check-row{display:flex;align-items:center;justify-content:space-between;margin:14px 0 22px}
+.check-label{display:flex;align-items:center;gap:7px;cursor:pointer;color:rgba(255,180,220,.4);font-size:12.5px;user-select:none}
+.custom-check{
+  width:15px;height:15px;border-radius:4px;
+  border:1.5px solid rgba(255,150,200,.25);background:transparent;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;flex-shrink:0;
+}
+#remember{display:none}
+#remember:checked+.check-label .custom-check{background:#c084fc;border-color:#c084fc}
+.forgot{color:#c084fc;font-size:12.5px;text-decoration:none;transition:color .15s}
+.forgot:hover{color:#e879f9}
+
+/* ── Button ── */
+.btn-login{
+  width:100%;height:50px;border:none;border-radius:13px;
+  background:linear-gradient(135deg,#9333ea,#ec4899);
+  color:#fff;font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;
+  cursor:pointer;position:relative;overflow:hidden;
+  transition:transform .15s,box-shadow .2s;
+  box-shadow:0 6px 24px rgba(236,72,153,.35);
+  letter-spacing:.2px;
+}
+.btn-login:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(236,72,153,.5)}
+.btn-login:active{transform:translateY(0)}
+.btn-text{transition:opacity .2s}
+.btn-login.loading .btn-text{opacity:0}
+.btn-ripple{position:absolute;inset:0;pointer-events:none;background:rgba(255,255,255,.18);transform:scale(0);border-radius:50%;transition:transform .5s,opacity .5s;opacity:0}
+.btn-login.rippling .btn-ripple{transform:scale(4);opacity:0}
+.spinner{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:20px;height:20px;
+  border:2px solid rgba(255,255,255,.3);border-top-color:#fff;
+  border-radius:50%;animation:spin .7s linear infinite;
+  opacity:0;transition:opacity .2s;
+}
+@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+.btn-login.loading .spinner{opacity:1}
+
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+</style>
 </head>
 <body>
-    <div class="box">
-        <h2>Login</h2>
 
-        <form action="/login" method="POST">
-            <input 
-                type="text" 
-                name="username" 
-                placeholder="Enter Username" 
-                required
-            >
-            <br>
-            <button type="submit">Login</button>
-        </form>
+<canvas id="bg-canvas"></canvas>
 
-        <!-- Optional info -->
-        <div class="info">
-            Enter any username to continue
+<div class="toast" id="toast">
+  <div class="toast-dot" id="toast-dot"></div>
+  <span id="toast-msg"></span>
+</div>
+
+<div class="page">
+
+  <!-- ══════════════════════════════════════
+       JAPANESE ANIME CHARACTER — Pure SVG
+  ══════════════════════════════════════ -->
+  <div class="char-wrap">
+    <svg class="char-svg" viewBox="0 0 210 300" xmlns="http://www.w3.org/2000/svg">
+
+      <!-- ── Kimono / body ── -->
+      <!-- main kimono -->
+      <path d="M35 175 Q28 200 25 270 L185 270 Q182 200 175 175 Q150 165 105 163 Q60 165 35 175Z" fill="#e8c5f5"/>
+      <!-- kimono overlap left -->
+      <path d="M105 163 Q85 170 70 195 L95 220 Q100 200 105 185Z" fill="#d4a8f0"/>
+      <!-- kimono overlap right -->
+      <path d="M105 163 Q125 170 140 195 L115 220 Q110 200 105 185Z" fill="#c084f5"/>
+      <!-- obi / belt -->
+      <rect x="55" y="200" width="100" height="22" rx="6" fill="#9333ea"/>
+      <rect x="55" y="200" width="100" height="5" rx="3" fill="#a855f7"/>
+      <!-- obi knot (bow at back, visible as small bow front) -->
+      <ellipse cx="105" cy="211" rx="18" ry="8" fill="#7c3aed"/>
+      <!-- kimono pattern - small sakura shapes on fabric -->
+      <circle cx="60" cy="230" r="4" fill="#f9a8d4" opacity=".5"/>
+      <circle cx="75" cy="250" r="3" fill="#f9a8d4" opacity=".4"/>
+      <circle cx="145" cy="235" r="4" fill="#f9a8d4" opacity=".5"/>
+      <circle cx="158" cy="255" r="3" fill="#f9a8d4" opacity=".4"/>
+      <circle cx="90" cy="245" r="2.5" fill="#e879f9" opacity=".35"/>
+      <circle cx="125" cy="248" r="2.5" fill="#e879f9" opacity=".35"/>
+
+      <!-- ── Sleeves ── -->
+      <!-- left sleeve (wide furisode) -->
+      <path d="M35 175 Q10 185 8 240 Q20 245 40 235 Q45 210 55 195Z" fill="#e8c5f5"/>
+      <path d="M8 240 Q12 265 30 268 Q40 255 40 235Z" fill="#d4a8f0"/>
+      <!-- left hand peeking -->
+      <ellipse cx="22" cy="268" rx="11" ry="9" fill="#fde8d8"/>
+      <!-- fingers -->
+      <path d="M13 264 Q11 258 14 256" stroke="#f5c5a3" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      <path d="M16 261 Q14 254 17 252" stroke="#f5c5a3" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+
+      <!-- right sleeve (waving up) -->
+      <path d="M175 175 Q195 155 205 110 Q200 100 190 105 Q183 145 165 168Z" fill="#e8c5f5">
+        <animateTransform attributeName="transform" type="rotate"
+          values="0 175 175; -8 175 175; 0 175 175" dur="1.4s" repeatCount="indefinite"/>
+      </path>
+      <!-- right hand -->
+      <ellipse cx="205" cy="108" rx="11" ry="9" fill="#fde8d8">
+        <animateTransform attributeName="transform" type="rotate"
+          values="0 175 175; -8 175 175; 0 175 175" dur="1.4s" repeatCount="indefinite"/>
+      </ellipse>
+
+      <!-- ── Neck ── -->
+      <rect x="90" y="148" width="30" height="20" rx="8" fill="#fde8d8"/>
+      <!-- collar left -->
+      <path d="M90 155 Q75 162 65 175" stroke="white" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <!-- collar right -->
+      <path d="M120 155 Q135 162 145 175" stroke="white" stroke-width="4" stroke-linecap="round" fill="none"/>
+
+      <!-- ── Head ── -->
+      <ellipse cx="105" cy="100" rx="50" ry="52" fill="#fde8d8"/>
+
+      <!-- ── Hair - long black with highlight ── -->
+      <!-- back hair (behind head) -->
+      <ellipse cx="105" cy="88" rx="52" ry="40" fill="#1a0a2e"/>
+      <!-- long hair flowing down left -->
+      <path d="M55 95 Q42 130 45 200 Q55 215 65 200 Q60 145 68 110Z" fill="#1a0a2e"/>
+      <!-- long hair flowing down right -->
+      <path d="M155 95 Q168 130 165 200 Q155 215 145 200 Q150 145 142 110Z" fill="#1a0a2e"/>
+      <!-- top / front hair fringe -->
+      <path d="M56 85 Q60 50 105 46 Q150 50 154 85" fill="#1a0a2e"/>
+      <!-- side bangs left -->
+      <path d="M56 85 Q50 100 55 115 Q62 105 65 92Z" fill="#1a0a2e"/>
+      <!-- side bangs right -->
+      <path d="M154 85 Q160 100 155 115 Q148 105 145 92Z" fill="#1a0a2e"/>
+      <!-- fringe strands -->
+      <path d="M80 52 Q76 72 80 85" stroke="#2d1060" stroke-width="5" stroke-linecap="round" fill="none"/>
+      <path d="M93 48 Q90 68 92 82" stroke="#2d1060" stroke-width="5" stroke-linecap="round" fill="none"/>
+      <path d="M107 47 Q105 67 106 80" stroke="#2d1060" stroke-width="5" stroke-linecap="round" fill="none"/>
+      <!-- hair highlight shine -->
+      <ellipse cx="88" cy="66" rx="14" ry="7" fill="#3b1d7a" opacity=".65" transform="rotate(-18 88 66)"/>
+      <ellipse cx="78" cy="60" rx="5" ry="3" fill="#6d28d9" opacity=".5" transform="rotate(-22 78 60)"/>
+
+      <!-- ── Hair ornament (kanzashi) ── -->
+      <!-- pin -->
+      <line x1="130" y1="58" x2="148" y2="42" stroke="#d97706" stroke-width="2" stroke-linecap="round"/>
+      <!-- flower top -->
+      <circle cx="149" cy="41" r="7" fill="#fcd34d"/>
+      <circle cx="149" cy="41" r="4" fill="#f59e0b"/>
+      <circle cx="157" cy="38" r="5" fill="#fcd34d"/>
+      <circle cx="157" cy="38" r="3" fill="#f59e0b"/>
+      <circle cx="153" cy="46" r="4" fill="#fcd34d"/>
+      <circle cx="153" cy="46" r="2.5" fill="#f59e0b"/>
+      <!-- sakura petals on pin -->
+      <circle cx="142" cy="44" r="3" fill="#fda4af"/>
+      <circle cx="147" cy="35" r="2.5" fill="#fda4af"/>
+
+      <!-- ── Ears ── -->
+      <ellipse cx="55" cy="102" rx="8" ry="10" fill="#fde8d8"/>
+      <ellipse cx="155" cy="102" rx="8" ry="10" fill="#fde8d8"/>
+      <ellipse cx="55" cy="102" rx="5" ry="7" fill="#f5c5a3"/>
+      <ellipse cx="155" cy="102" rx="5" ry="7" fill="#f5c5a3"/>
+
+      <!-- ── Eyes NORMAL - large anime eyes ── -->
+      <g class="eyes-normal">
+        <!-- eye whites -->
+        <ellipse cx="84" cy="100" rx="15" ry="17" fill="white"/>
+        <ellipse cx="126" cy="100" rx="15" ry="17" fill="white"/>
+        <!-- gradient iris left -->
+        <defs>
+          <radialGradient id="eyeL" cx="40%" cy="35%">
+            <stop offset="0%" stop-color="#a78bfa"/>
+            <stop offset="60%" stop-color="#7c3aed"/>
+            <stop offset="100%" stop-color="#4c1d95"/>
+          </radialGradient>
+          <radialGradient id="eyeR" cx="40%" cy="35%">
+            <stop offset="0%" stop-color="#a78bfa"/>
+            <stop offset="60%" stop-color="#7c3aed"/>
+            <stop offset="100%" stop-color="#4c1d95"/>
+          </radialGradient>
+          <!-- Clip paths for eyes -->
+          <clipPath id="clipL"><ellipse cx="84" cy="100" rx="15" ry="17"/></clipPath>
+          <clipPath id="clipR"><ellipse cx="126" cy="100" rx="15" ry="17"/></clipPath>
+        </defs>
+        <ellipse cx="84" cy="101" rx="11" ry="12" fill="url(#eyeL)"/>
+        <ellipse cx="126" cy="101" rx="11" ry="12" fill="url(#eyeR)"/>
+        <!-- pupils -->
+        <circle cx="85" cy="102" r="6" fill="#1e0a3c"/>
+        <circle cx="127" cy="102" r="6" fill="#1e0a3c"/>
+        <!-- sparkle big -->
+        <circle cx="88" cy="97" r="3.5" fill="white"/>
+        <circle cx="130" cy="97" r="3.5" fill="white"/>
+        <!-- sparkle small -->
+        <circle cx="80" cy="107" r="1.5" fill="rgba(255,255,255,.6)"/>
+        <circle cx="122" cy="107" r="1.5" fill="rgba(255,255,255,.6)"/>
+        <!-- bottom eyelid shimmer -->
+        <path d="M70 110 Q84 116 98 110" stroke="#e9d5ff" stroke-width="1" fill="none" opacity=".5"/>
+        <path d="M112 110 Q126 116 140 110" stroke="#e9d5ff" stroke-width="1" fill="none" opacity=".5"/>
+        <!-- upper lashes -->
+        <path d="M70 90 Q76 83 84 87" stroke="#1e0a3c" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <path d="M84 87 Q90 82 96 87" stroke="#1e0a3c" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <path d="M96 87 Q102 83 106 89" stroke="#1e0a3c" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <path d="M112 89 Q116 83 126 87" stroke="#1e0a3c" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <path d="M126 87 Q132 82 138 87" stroke="#1e0a3c" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <path d="M138 87 Q144 83 148 90" stroke="#1e0a3c" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        <!-- lower lashes -->
+        <path d="M70 110 Q72 115 70 118" stroke="#1e0a3c" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+        <path d="M98 112 Q100 117 99 120" stroke="#1e0a3c" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+        <path d="M112 112 Q111 117 112 120" stroke="#1e0a3c" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+        <path d="M140 110 Q142 115 141 118" stroke="#1e0a3c" stroke-width="1.2" stroke-linecap="round" fill="none"/>
+      </g>
+
+      <!-- ── Eyes SHY (peeking, looking sideways) ── -->
+      <g class="eyes-shy">
+        <!-- whites -->
+        <ellipse cx="84" cy="103" rx="15" ry="14" fill="white"/>
+        <ellipse cx="126" cy="103" rx="15" ry="14" fill="white"/>
+        <!-- irises shifted right (looking away shyly) -->
+        <ellipse cx="88" cy="104" rx="10" ry="11" fill="url(#eyeL)"/>
+        <ellipse cx="130" cy="104" rx="10" ry="11" fill="url(#eyeR)"/>
+        <circle cx="89" cy="105" r="5.5" fill="#1e0a3c"/>
+        <circle cx="131" cy="105" r="5.5" fill="#1e0a3c"/>
+        <circle cx="91" cy="101" r="2.5" fill="white"/>
+        <circle cx="133" cy="101" r="2.5" fill="white"/>
+        <!-- heavy lashes same as above -->
+        <path d="M70 92 Q76 85 84 89" stroke="#1e0a3c" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <path d="M84 89 Q90 84 96 89" stroke="#1e0a3c" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <path d="M112 91 Q118 85 126 89" stroke="#1e0a3c" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <path d="M126 89 Q132 84 138 89" stroke="#1e0a3c" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <!-- sweat drops -->
+        <path d="M65 82 Q68 75 71 82 Q71 87 68 87 Q65 87 65 82Z" fill="#93c5fd" opacity=".8"/>
+      </g>
+
+      <!-- ── Eyes HAPPY (success) ── -->
+      <g class="eyes-happy">
+        <path d="M70 100 Q84 88 98 100" stroke="#1e0a3c" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <path d="M112 100 Q126 88 140 100" stroke="#1e0a3c" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <!-- sparkles -->
+        <text x="60" y="90" font-size="10" fill="#fbbf24">✦</text>
+        <text x="136" y="90" font-size="10" fill="#fbbf24">✦</text>
+      </g>
+
+      <!-- ── Blush ── -->
+      <ellipse class="blush" cx="64" cy="114" rx="14" ry="8" fill="#fb7185" opacity=".38"/>
+      <ellipse class="blush" cx="146" cy="114" rx="14" ry="8" fill="#fb7185" opacity=".38"/>
+
+      <!-- ── Nose ── -->
+      <path d="M102 112 Q105 117 108 112" stroke="#f5a090" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+
+      <!-- ── Mouth ── -->
+      <path d="M93 126 Q105 136 117 126" stroke="#e07070" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <!-- teeth peek on happy -->
+      <path class="eyes-happy" d="M97 128 Q105 134 113 128 Q113 132 105 133 Q97 132 97 128Z" fill="white"/>
+
+      <!-- ── Decorative sparkles ── -->
+      <text x="16" y="90" font-size="13" fill="#fbbf24" opacity=".8">✦</text>
+      <text x="178" y="165" font-size="10" fill="#c084fc" opacity=".7">✦</text>
+      <text x="10" y="190" font-size="8" fill="#f9a8d4" opacity=".6">★</text>
+      <text x="190" y="220" font-size="8" fill="#fbbf24" opacity=".5">★</text>
+
+      <!-- ── Fan held in left hand ── -->
+      <g transform="translate(8 250) rotate(-30 15 15)">
+        <path d="M5 25 Q0 0 25 0 Q22 12 10 25Z" fill="#f9a8d4" opacity=".9"/>
+        <path d="M10 25 Q8 2 25 0 Q24 12 15 25Z" fill="#fda4af" opacity=".9"/>
+        <path d="M15 25 Q15 3 25 0 Q26 12 20 25Z" fill="#fb7185" opacity=".9"/>
+        <!-- fan pattern -->
+        <path d="M5 25 Q0 0 25 0" stroke="#e11d48" stroke-width=".8" fill="none" opacity=".5"/>
+        <path d="M10 25 Q8 2 25 0" stroke="#e11d48" stroke-width=".8" fill="none" opacity=".5"/>
+        <path d="M15 25 Q15 3 25 0" stroke="#e11d48" stroke-width=".8" fill="none" opacity=".5"/>
+        <!-- fan handle -->
+        <line x1="15" y1="25" x2="18" y2="34" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"/>
+      </g>
+
+    </svg>
+    <div class="char-shadow"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       LOGIN CARD
+  ══════════════════════════════════════ -->
+  <div class="login-card">
+    <div class="login-title">ようこそ！ Welcome back</div>
+    <div class="login-sub">Cloud MIN Project · Secure Access</div>
+
+    <form id="login-form" action="/login" method="POST" onsubmit="return handleLogin(event)">
+
+      <!-- Username -->
+      <div class="field">
+        <label class="field-label" for="username-in">Username</label>
+        <div class="input-row">
+          <div class="input-ico">
+            <svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round">
+              <circle cx="8" cy="5.5" r="2.5"/>
+              <path d="M2.5 13.5c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/>
+            </svg>
+          </div>
+          <input class="field-input" id="username-in" name="username"
+                 type="text" placeholder="Enter username" autocomplete="off">
         </div>
-    </div>
+        <div class="field-msg" id="user-msg"></div>
+      </div>
+
+      <!-- Password -->
+      <div class="field">
+        <label class="field-label" for="pass-in">Password</label>
+        <div class="input-row">
+          <div class="input-ico">
+            <svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round">
+              <rect x="2" y="7" width="12" height="8" rx="1.5"/>
+              <path d="M5 7V5a3 3 0 016 0v2"/>
+            </svg>
+          </div>
+          <input class="field-input" id="pass-in" name="password"
+                 type="password" placeholder="Enter password">
+          <button type="button" class="eye-btn" onclick="togglePw()">
+            <svg viewBox="0 0 16 16" fill="none" id="eye-icon">
+              <path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+          </button>
+        </div>
+        <div class="field-msg" id="pass-msg"></div>
+        <div class="s-bar-wrap" id="s-bar-wrap">
+          <div class="s-bar-bg"><div class="s-bar-fill" id="s-bar"></div></div>
+        </div>
+      </div>
+
+      <!-- Remember / Forgot -->
+      <div class="check-row">
+        <input type="checkbox" id="remember">
+        <label class="check-label" for="remember">
+          <div class="custom-check">
+            <svg id="check-tick" width="10" height="10" viewBox="0 0 10 10" fill="none"
+                 stroke="white" stroke-width="1.8" stroke-linecap="round"
+                 style="opacity:0;transition:opacity .15s">
+              <polyline points="2,5 4.5,7.5 8,3"/>
+            </svg>
+          </div>
+          Remember me
+        </label>
+        <a href="#" class="forgot">Forgot password?</a>
+      </div>
+
+      <button class="btn-login" id="login-btn" type="submit">
+        <span class="btn-text">Sign in &nbsp;→</span>
+        <div class="btn-ripple"></div>
+        <div class="spinner"></div>
+      </button>
+
+    </form>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════
+   BACKGROUND — Japanese night scene
+════════════════════════════════════════ */
+const cv  = document.getElementById('bg-canvas');
+const ctx = cv.getContext('2d');
+let W, H;
+
+function resize(){ W = cv.width = innerWidth; H = cv.height = innerHeight; }
+resize(); window.addEventListener('resize', ()=>{ resize(); drawBg(); });
+
+/* stars */
+const stars = Array.from({length:200},()=>({
+  x:Math.random(), y:Math.random(),
+  r:Math.random()*1.4+.2,
+  a:Math.random()*.8+.2,
+  blink:Math.random()*Math.PI*2,
+  speed:Math.random()*.02+.005
+}));
+
+/* moon */
+function drawMoon(t){
+  const mx = W*.78, my = H*.18, mr = Math.min(W,H)*.075;
+  // moon glow
+  const grd = ctx.createRadialGradient(mx,my,0,mx,my,mr*3);
+  grd.addColorStop(0,'rgba(255,240,200,.14)');
+  grd.addColorStop(1,'transparent');
+  ctx.beginPath(); ctx.arc(mx,my,mr*3,0,Math.PI*2);
+  ctx.fillStyle=grd; ctx.fill();
+  // moon body
+  const mg = ctx.createRadialGradient(mx-mr*.25,my-mr*.25,0,mx,my,mr);
+  mg.addColorStop(0,'#fffbeb');
+  mg.addColorStop(.6,'#fef3c7');
+  mg.addColorStop(1,'#fde68a');
+  ctx.beginPath(); ctx.arc(mx,my,mr,0,Math.PI*2);
+  ctx.fillStyle=mg; ctx.fill();
+  // moon shadow (crescent shadow)
+  ctx.beginPath(); ctx.arc(mx+mr*.3,my-mr*.15,mr*.8,0,Math.PI*2);
+  ctx.fillStyle='rgba(13,10,26,.55)'; ctx.fill();
+}
+
+/* torii gate */
+function drawTorii(){
+  const cx2=W*.12, cy2=H, tw=W*.14, th=H*.42;
+  const top=cy2-th, pilW=tw*.09;
+  ctx.save();
+  // pillars
+  ctx.fillStyle='#c2410c';
+  ctx.fillRect(cx2-tw*.4, top+th*.08, pilW, th);
+  ctx.fillRect(cx2+tw*.4-pilW, top+th*.08, pilW, th);
+  // top beam (kasagi) curved
+  ctx.beginPath();
+  ctx.moveTo(cx2-tw*.52, top+th*.04);
+  ctx.quadraticCurveTo(cx2, top-th*.04, cx2+tw*.52, top+th*.04);
+  ctx.lineWidth=tw*.12; ctx.strokeStyle='#c2410c'; ctx.stroke();
+  // second beam (nuki)
+  ctx.fillStyle='#b91c1c';
+  ctx.fillRect(cx2-tw*.42, top+th*.18, tw*.84, tw*.09);
+  // small top center post
+  ctx.fillStyle='#ef4444';
+  ctx.fillRect(cx2-pilW*.5, top-th*.07, pilW, th*.12);
+  ctx.restore();
+}
+
+/* mountains */
+function drawMountains(){
+  // far mountains
+  ctx.beginPath();
+  ctx.moveTo(0,H*.7);
+  ctx.lineTo(W*.15,H*.35);
+  ctx.lineTo(W*.3,H*.55);
+  ctx.lineTo(W*.45,H*.28);
+  ctx.lineTo(W*.6,H*.48);
+  ctx.lineTo(W*.75,H*.22);
+  ctx.lineTo(W*.9,H*.45);
+  ctx.lineTo(W,H*.38);
+  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
+  const mg=ctx.createLinearGradient(0,H*.2,0,H*.7);
+  mg.addColorStop(0,'#2d1b4e');
+  mg.addColorStop(1,'#1a0a2e');
+  ctx.fillStyle=mg; ctx.fill();
+
+  // near hills
+  ctx.beginPath();
+  ctx.moveTo(0,H*.85);
+  ctx.bezierCurveTo(W*.2,H*.65,W*.4,H*.78,W*.55,H*.7);
+  ctx.bezierCurveTo(W*.7,H*.62,W*.85,H*.75,W,H*.68);
+  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
+  const hg=ctx.createLinearGradient(0,H*.65,0,H);
+  hg.addColorStop(0,'#1e0a38');
+  hg.addColorStop(1,'#0d0520');
+  ctx.fillStyle=hg; ctx.fill();
+}
+
+/* sakura tree */
+function drawTree(){
+  const tx=W*.88, ty=H*.72;
+  // trunk
+  ctx.strokeStyle='#3b1a08'; ctx.lineWidth=8;
+  ctx.beginPath(); ctx.moveTo(tx,H); ctx.quadraticCurveTo(tx-10,ty+60,tx-5,ty); ctx.stroke();
+  // branches
+  ctx.lineWidth=4;
+  ctx.beginPath(); ctx.moveTo(tx-5,ty); ctx.quadraticCurveTo(tx-50,ty-40,tx-80,ty-20); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(tx-5,ty+20); ctx.quadraticCurveTo(tx+40,ty-20,tx+60,ty-50); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(tx-5,ty); ctx.quadraticCurveTo(tx-10,ty-60,tx+10,ty-90); ctx.stroke();
+  // blossom clusters
+  const blossomPos=[
+    [tx-80,ty-20],[tx-65,ty-45],[tx-55,ty-65],
+    [tx-30,ty-85],[tx+10,ty-90],[tx+30,ty-75],
+    [tx+60,ty-50],[tx+45,ty-25]
+  ];
+  blossomPos.forEach(([bx,by])=>{
+    for(let i=0;i<8;i++){
+      const angle=Math.random()*Math.PI*2;
+      const dist=Math.random()*22;
+      const px=bx+Math.cos(angle)*dist, py=by+Math.sin(angle)*dist;
+      ctx.beginPath(); ctx.arc(px,py,Math.random()*5+3,0,Math.PI*2);
+      const pink=Math.random()>.5?'rgba(255,182,193,.75)':'rgba(255,105,155,.55)';
+      ctx.fillStyle=pink; ctx.fill();
+    }
+  });
+}
+
+/* lanterns */
+function drawLanterns(t){
+  const lans=[{x:.22,y:.48},{x:.35,y:.52},{x:.58,y:.44}];
+  lans.forEach((l,i)=>{
+    const lx=W*l.x, ly=H*l.y;
+    const sway=Math.sin(t*.0008+i*1.5)*4;
+    ctx.save(); ctx.translate(sway,0);
+    // string
+    ctx.strokeStyle='rgba(255,220,150,.4)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(lx,ly-30); ctx.lineTo(lx,ly); ctx.stroke();
+    // lantern body glow
+    const lg=ctx.createRadialGradient(lx,ly,0,lx,ly,25);
+    lg.addColorStop(0,'rgba(255,180,60,.25)');
+    lg.addColorStop(1,'transparent');
+    ctx.beginPath(); ctx.arc(lx,ly,25,0,Math.PI*2);
+    ctx.fillStyle=lg; ctx.fill();
+    // lantern body
+    ctx.beginPath();
+    ctx.ellipse(lx,ly,12,16,0,0,Math.PI*2);
+    ctx.fillStyle='rgba(220,80,20,.85)'; ctx.fill();
+    ctx.strokeStyle='rgba(255,150,60,.6)'; ctx.lineWidth=1; ctx.stroke();
+    // lantern bands
+    ctx.strokeStyle='rgba(200,60,10,.7)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(lx-12,ly); ctx.lineTo(lx+12,ly); ctx.stroke();
+    // top/bottom caps
+    ctx.fillStyle='rgba(150,40,10,.9)';
+    ctx.fillRect(lx-7,ly-17,14,4);
+    ctx.fillRect(lx-7,ly+13,14,4);
+    ctx.restore();
+  });
+}
+
+/* ground / water reflection */
+function drawGround(){
+  const gg=ctx.createLinearGradient(0,H*.82,0,H);
+  gg.addColorStop(0,'#0d0520');
+  gg.addColorStop(1,'#070310');
+  ctx.fillStyle=gg;
+  ctx.fillRect(0,H*.82,W,H*.18);
+
+  // water shimmer lines
+  for(let i=0;i<6;i++){
+    const wy=H*(.86+i*.022);
+    ctx.beginPath();
+    ctx.moveTo(W*.1,wy); ctx.lineTo(W*.9,wy);
+    ctx.strokeStyle=`rgba(200,150,255,${.04+i*.005})`;
+    ctx.lineWidth=.5; ctx.stroke();
+  }
+}
+
+/* sky gradient */
+function drawSky(){
+  const sg=ctx.createLinearGradient(0,0,0,H);
+  sg.addColorStop(0,'#03000d');
+  sg.addColorStop(.3,'#0d0520');
+  sg.addColorStop(.6,'#1a0a2e');
+  sg.addColorStop(1,'#0d0a1a');
+  ctx.fillStyle=sg;
+  ctx.fillRect(0,0,W,H);
+}
+
+let animT=0;
+function drawBg(){
+  animT++;
+  ctx.clearRect(0,0,W,H);
+  drawSky();
+
+  // stars
+  stars.forEach(s=>{
+    const a=s.a*(0.5+0.5*Math.sin(animT*s.speed+s.blink));
+    ctx.beginPath(); ctx.arc(s.x*W,s.y*H*.6,s.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(230,210,255,${a})`; ctx.fill();
+  });
+
+  drawMoon(animT);
+  drawMountains();
+  drawTree();
+  drawTorii();
+  drawLanterns(animT);
+  drawGround();
+  requestAnimationFrame(drawBg);
+}
+drawBg();
+
+/* ── Falling sakura petals ── */
+(function spawnPetals(){
+  const colors=['#ffb7c5','#ff85a1','#fda4af','#f9a8d4','#fbcfe8'];
+  for(let i=0;i<18;i++){
+    const p=document.createElement('div');
+    p.className='petal';
+    const size=(Math.random()*8+6)+'px';
+    p.style.cssText=`
+      left:${Math.random()*100}%;
+      width:${size};height:${size};
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${Math.random()*8+6}s;
+      animation-delay:${Math.random()*8}s;
+      border-radius:${Math.random()>.5?'50% 0 50% 0':'50%'};
+      opacity:.7;
+    `;
+    document.body.appendChild(p);
+  }
+})();
+
+/* ── Character reactions ── */
+const pIn = document.getElementById('pass-in');
+pIn.addEventListener('focus', ()=> document.body.classList.add('peeking'));
+pIn.addEventListener('blur',  ()=> document.body.classList.remove('peeking'));
+
+/* ── Validation ── */
+const uIn  = document.getElementById('username-in');
+const uMsg = document.getElementById('user-msg');
+const pMsg = document.getElementById('pass-msg');
+
+uIn.addEventListener('input', function(){
+  const v=this.value.trim();
+  if(!v){ uMsg.textContent=''; uMsg.className='field-msg'; this.className='field-input'; return; }
+  if(v.length<3){ uMsg.textContent='At least 3 characters'; uMsg.className='field-msg err'; this.className='field-input error'; }
+  else { uMsg.textContent='Looks good! ✓'; uMsg.className='field-msg ok'; this.className='field-input success'; }
+});
+
+pIn.addEventListener('input', function(){
+  const v=this.value;
+  const wrap=document.getElementById('s-bar-wrap'), bar=document.getElementById('s-bar');
+  if(!v){ pMsg.textContent=''; pMsg.className='field-msg'; this.className='field-input'; wrap.classList.remove('show'); return; }
+  wrap.classList.add('show');
+  const s=strength(v);
+  const labels=['Too short','Weak','Fair','Strong','Very strong'];
+  const colors=['#ef4444','#f97316','#eab308','#22c55e','#10b981'];
+  const widths=['20%','40%','60%','80%','100%'];
+  pMsg.textContent='Strength: '+labels[s]; pMsg.style.color=colors[s]; pMsg.className='field-msg';
+  bar.style.width=widths[s]; bar.style.background=colors[s];
+  this.className=s<2?'field-input error':'field-input success';
+});
+
+function strength(p){ let s=0; if(p.length>=6)s++; if(p.length>=10)s++; if(/[A-Z]/.test(p))s++; if(/[0-9]/.test(p))s++; return Math.min(s,4); }
+
+/* ── Eye toggle ── */
+function togglePw(){
+  const show=pIn.type==='text';
+  pIn.type=show?'password':'text';
+  document.getElementById('eye-icon').innerHTML=show
+    ? '<path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.5"/>'
+    : '<path d="M2 2l12 12M6.5 6.6A2 2 0 0010 10M9.88 9.88A2 2 0 016.1 6.1M1 8s3-5 7-5c1.25 0 2.43.37 3.44 1M15 8s-1.3 1.84-3.5 3.09" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>';
+}
+
+/* ── Checkbox ── */
+document.getElementById('remember').addEventListener('change', function(){
+  document.getElementById('check-tick').style.opacity=this.checked?'1':'0';
+});
+
+/* ── Toast ── */
+function showToast(msg,color){
+  const t=document.getElementById('toast');
+  document.getElementById('toast-msg').textContent=msg;
+  document.getElementById('toast-dot').style.background=color||'#22c55e';
+  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+/* ── Login ── */
+function handleLogin(e){
+  e.preventDefault();
+  const u=uIn.value.trim();
+  const btn=document.getElementById('login-btn');
+
+  if(!u||u.length<3){
+    uIn.className='field-input error';
+    uMsg.textContent='Username required'; uMsg.className='field-msg err';
+    uIn.style.animation='none';
+    requestAnimationFrame(()=>{ uIn.style.animation='shake .4s ease'; });
+    return false;
+  }
+
+  btn.classList.add('rippling');
+  setTimeout(()=>btn.classList.remove('rippling'),500);
+  btn.classList.add('loading');
+
+  setTimeout(()=>{
+    btn.classList.remove('loading');
+    document.body.classList.add('success-state');
+    showToast('ようこそ '+u+'! Redirecting…','#a78bfa');
+    uIn.className='field-input success';
+    pIn.className=pIn.value?'field-input success':'field-input';
+    setTimeout(()=>document.getElementById('login-form').submit(),1200);
+  },1800);
+  return false;
+}
+</script>
 </body>
 </html>

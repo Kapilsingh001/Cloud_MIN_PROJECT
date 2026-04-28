@@ -5,15 +5,21 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "dev": "nodemon app.js"
+    "dev": "nodemon app.js",
+    "start:all": "node start-all.js"
   },
-  "keywords": ["cloud", "load-balancer", "multi-region", "nodejs"],
+  "keywords": [
+    "cloud",
+    "load-balancer",
+    "multi-region",
+    "nodejs"
+  ],
   "author": "Dhruv",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
     "body-parser": "^2.2.2",
-    "ejs": "^5.0.1",
+    "ejs": "^5.0.2",
     "express": "^5.2.1"
   },
   "devDependencies": {

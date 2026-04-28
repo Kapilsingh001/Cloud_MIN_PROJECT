@@ -1,91 +1,445 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Dashboard</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(to right, #eef2f7, #d9e4f5);
-            text-align: center;
-            padding-top: 50px;
-        }
-        .card {
-            background: white;
-            padding: 30px;
-            margin: auto;
-            width: 350px;
-            border-radius: 12px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        .status {
-            margin-top: 10px;
-            padding: 8px;
-            background: #e6ffed;
-            border-radius: 6px;
-            color: green;
-            font-weight: bold;
-        }
-        .info {
-            margin-top: 10px;
-            padding: 8px;
-            background: #f1f1f1;
-            border-radius: 6px;
-        }
-        .server {
-            margin-top: 10px;
-            padding: 10px;
-            background: #e3f2fd;
-            border-radius: 6px;
-            font-weight: bold;
-            color: #0d47a1;
-        }
-        .time {
-            margin-top: 10px;
-            padding: 8px;
-            background: #fff3cd;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-        .note {
-            margin-top: 15px;
-            font-size: 13px;
-            color: #555;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dashboard · <%= user %></title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{min-height:100%;font-family:'DM Sans',sans-serif;background:#0a0a14;color:#f0f0ff}
+
+#particle-canvas{position:fixed;inset:0;pointer-events:none;z-index:0}
+
+/* ── toast ── */
+.toast{
+  position:fixed;top:24px;left:50%;
+  transform:translateX(-50%) translateY(-70px);
+  background:#1a1a2e;border:1px solid rgba(255,255,255,.12);
+  border-radius:10px;padding:12px 20px;
+  color:#f0f0ff;font-size:13px;white-space:nowrap;
+  display:flex;align-items:center;gap:8px;
+  transition:transform .4s cubic-bezier(.22,1,.36,1),opacity .4s;
+  opacity:0;z-index:100;
+}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+.app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
+
+/* ── header ── */
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 32px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+  background:rgba(10,10,20,.8);
+  backdrop-filter:blur(20px);
+  position:sticky;top:0;z-index:20;
+  animation:slideDown .6s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes slideDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+.brand{display:flex;align-items:center;gap:11px}
+.brand-ico{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  display:flex;align-items:center;justify-content:center;
+  animation:pulse 2.5s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(99,102,241,.4)}50%{box-shadow:0 0 0 8px rgba(99,102,241,0)}}
+.brand-ico svg{width:18px;height:18px}
+.brand-name{font-size:15px;font-weight:600;letter-spacing:-.3px}
+
+.nav-right{display:flex;align-items:center;gap:12px}
+.status-pill{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.18);
+  border-radius:20px;padding:5px 12px;font-size:12px;color:#4ade80;font-weight:500;
+}
+.dot-g{width:7px;height:7px;background:#4ade80;border-radius:50%;animation:dpulse 2s ease-in-out infinite}
+@keyframes dpulse{0%,100%{box-shadow:0 0 0 0 rgba(74,222,128,.45)}50%{box-shadow:0 0 0 5px rgba(74,222,128,0)}}
+.clock{font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,.35);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:5px 10px}
+.avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:600;font-size:14px;
+  border:2px solid rgba(99,102,241,.3);
+  cursor:default;transition:transform .2s,box-shadow .2s;
+}
+.avatar:hover{transform:scale(1.08);box-shadow:0 0 16px rgba(99,102,241,.45)}
+
+/* ── main ── */
+main{flex:1;padding:32px;max-width:1060px;margin:0 auto;width:100%}
+
+/* hero */
+.hero{margin-bottom:28px;animation:fadeUp .6s .1s both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.hero-tag{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#818cf8;font-weight:500;margin-bottom:7px}
+.hero-title{font-size:32px;font-weight:600;letter-spacing:-.6px;color:#f0f0ff;margin-bottom:4px}
+.hero-title em{font-style:normal;background:linear-gradient(135deg,#6366f1,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{color:rgba(255,255,255,.35);font-size:13.5px}
+
+/* stat cards */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+.sc{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);
+  border-radius:16px;padding:20px;
+  position:relative;overflow:hidden;
+  backdrop-filter:blur(16px);cursor:default;
+  transition:transform .2s,border-color .2s,box-shadow .2s;
+  animation:fadeUp .6s both;
+}
+.sc:nth-child(1){animation-delay:.18s}.sc:nth-child(2){animation-delay:.26s}.sc:nth-child(3){animation-delay:.34s}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:1.5px;border-radius:2px}
+.sc.cp::before{background:linear-gradient(90deg,#6366f1,transparent)}
+.sc.cg::before{background:linear-gradient(90deg,#22c55e,transparent)}
+.sc.cy::before{background:linear-gradient(90deg,#f59e0b,transparent)}
+.sc:hover{transform:translateY(-3px);border-color:rgba(99,102,241,.22);box-shadow:0 12px 32px rgba(0,0,0,.3)}
+.sc-icon{font-size:19px;margin-bottom:10px;display:inline-block;animation:bob 3.5s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.sc-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.38);font-weight:500;margin-bottom:4px}
+.sc-val{font-size:18px;font-weight:600;display:flex;align-items:center;gap:8px}
+.bdg{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500}
+.bdg-p{background:rgba(99,102,241,.14);color:#818cf8;border:1px solid rgba(99,102,241,.2)}
+.bdg-g{background:rgba(34,197,94,.1);color:#4ade80;border:1px solid rgba(34,197,94,.18)}
+.bdg-y{background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.18)}
+
+/* info cards */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.ic{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);
+  border-radius:16px;padding:22px;
+  backdrop-filter:blur(16px);
+  transition:transform .2s,border-color .2s,box-shadow .2s;
+  animation:fadeUp .6s both;
+}
+.ic:nth-child(1){animation-delay:.4s}.ic:nth-child(2){animation-delay:.48s}
+.ic:nth-child(3){animation-delay:.56s}.ic:nth-child(4){animation-delay:.64s}
+.ic:hover{transform:translateY(-2px);border-color:rgba(99,102,241,.18);box-shadow:0 8px 28px rgba(0,0,0,.25)}
+.ic-head{font-size:12.5px;font-weight:600;color:#f0f0ff;margin-bottom:14px;display:flex;align-items:center;gap:7px;letter-spacing:-.1px}
+.ic-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.ic-dot.p{background:#6366f1;box-shadow:0 0 6px rgba(99,102,241,.5)}
+.ic-dot.g{background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.4)}
+.ic-dot.y{background:#f59e0b}
+
+.row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px}
+.row:last-child{border-bottom:none}
+.rl{color:rgba(255,255,255,.38)}.rv{font-weight:500}
+.rv.p{color:#818cf8}.rv.g{color:#4ade80}.rv.y{color:#fbbf24}
+
+/* progress bars */
+.pb{margin-bottom:11px}.pb:last-child{margin-bottom:0}
+.pb-head{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px}
+.pb-lbl{color:rgba(255,255,255,.38)}
+.pb-pct{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500}
+.pb-bg{height:4px;background:rgba(255,255,255,.06);border-radius:10px;overflow:hidden}
+.pb-fill{
+  height:100%;border-radius:10px;width:0%;
+  transition:width .8s cubic-bezier(.22,1,.36,1);
+}
+.pb-fill.f1{background:linear-gradient(90deg,#6366f1,#a78bfa)}
+.pb-fill.f2{background:linear-gradient(90deg,#22c55e,#86efac)}
+.pb-fill.f3{background:linear-gradient(90deg,#ef4444,#fca5a5)}
+.pb-fill.f4{background:linear-gradient(90deg,#f59e0b,#fde68a)}
+
+/* live badge pulse on update */
+@keyframes flashUpdate{0%{opacity:.4}50%{opacity:1}100%{opacity:1}}
+.updating{animation:flashUpdate .4s ease}
+
+/* activity */
+.act{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.act:last-child{border-bottom:none}
+.act-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.act-dot.g{background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.5)}
+.act-dot.p{background:#6366f1;box-shadow:0 0 6px rgba(99,102,241,.5)}
+.act-dot.y{background:#f59e0b}
+.act-text{flex:1;font-size:13px}
+.act-time{font-size:11px;color:rgba(255,255,255,.28);font-family:'JetBrains Mono',monospace}
+
+/* live indicator */
+.live-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:10px;font-weight:600;letter-spacing:.05em;
+  color:#4ade80;background:rgba(34,197,94,.08);
+  border:1px solid rgba(34,197,94,.18);border-radius:20px;
+  padding:2px 8px;margin-left:auto;
+}
+.live-dot{width:5px;height:5px;background:#4ade80;border-radius:50%;animation:dpulse 1.5s infinite}
+
+/* warning colour for high usage */
+.warn{color:#fbbf24 !important}
+.crit{color:#f87171 !important}
+
+/* footer */
+footer{
+  text-align:center;padding:18px;
+  border-top:1px solid rgba(255,255,255,.06);
+  font-size:12px;color:rgba(255,255,255,.22);
+  animation:fadeUp .6s .72s both;
+}
+footer span{color:#818cf8}
+</style>
 </head>
-
 <body>
-    <div class="card">
-        <h2>Welcome <%= user %></h2>
-        <p>This is your dashboard</p>
 
-        <!-- ✅ Application status -->
-        <div class="status">
-            Application Status: Running ✅
-        </div>
+<canvas id="particle-canvas"></canvas>
 
-        <!-- ✅ Server identity (VERY IMPORTANT) -->
-        <div class="server">
-            Handled By: <%= server %>
-        </div>
+<div class="toast" id="toast">
+  <div class="toast-dot" id="toast-dot"></div>
+  <span id="toast-msg"></span>
+</div>
 
-        <!-- ✅ Dynamic time (extra improvement) -->
-        <div class="time">
-            Request Time: <%= new Date().toLocaleString() %>
-        </div>
+<div class="app">
 
-        <!-- ✅ Architecture info -->
-        <div class="info">
-            <p><b>Architecture:</b> Multi-Region Deployment</p>
-            <p><b>High Availability:</b> Enabled</p>
-            <p><b>Load Balancing:</b> Active</p>
-        </div>
-
-        <!-- ✅ Explanation note -->
-        <div class="note">
-            This request was served by one of multiple backend instances. 
-            If one server fails, traffic is automatically routed to another server via the load balancer.
-        </div>
+  <!-- header -->
+  <header>
+    <div class="brand">
+      <div class="brand-ico">
+        <svg viewBox="0 0 28 28" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+          <rect x="4" y="4" width="8" height="8" rx="2"/>
+          <rect x="16" y="4" width="8" height="8" rx="2"/>
+          <rect x="4" y="16" width="8" height="8" rx="2"/>
+          <path d="M16 20h8M20 16v8"/>
+        </svg>
+      </div>
+      <span class="brand-name">ControlHub</span>
     </div>
+    <div class="nav-right">
+      <div class="status-pill"><div class="dot-g"></div>All Systems Operational</div>
+      <div class="clock" id="hclock">--:--:--</div>
+      <div class="avatar"><%= user.charAt(0).toUpperCase() %></div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- hero -->
+    <div class="hero">
+      <p class="hero-tag">Dashboard Overview</p>
+      <h1 class="hero-title">Hello, <em><%= user %></em> 👋</h1>
+      <p class="hero-sub">Live system stats — updates every 3 seconds.</p>
+    </div>
+
+    <!-- top stat cards -->
+    <div class="stats">
+      <div class="sc cp">
+        <div class="sc-icon">🖥️</div>
+        <div class="sc-label">Active Server</div>
+        <div class="sc-val"><span id="s-hostname"><%= server %></span> <span class="bdg bdg-p">Live</span></div>
+      </div>
+      <div class="sc cg">
+        <div class="sc-icon">✅</div>
+        <div class="sc-label">App Status</div>
+        <div class="sc-val">Running <span class="bdg bdg-g">Healthy</span></div>
+      </div>
+      <div class="sc cy">
+        <div class="sc-icon">📊</div>
+        <div class="sc-label">Load Average</div>
+        <div class="sc-val"><span id="s-load" style="font-size:15px">–</span> <span class="bdg bdg-y">1m avg</span></div>
+      </div>
+    </div>
+
+    <!-- row 1 -->
+    <div class="grid2">
+
+      <!-- server info (real data) -->
+      <div class="ic">
+        <div class="ic-head">
+          <div class="ic-dot p"></div>Server Information
+          <span class="live-badge"><span class="live-dot"></span>LIVE</span>
+        </div>
+        <div class="row"><span class="rl">Hostname</span><span class="rv p" id="d-hostname">–</span></div>
+        <div class="row"><span class="rl">Platform / Arch</span><span class="rv" id="d-platform">–</span></div>
+        <div class="row"><span class="rl">CPU Cores</span><span class="rv" id="d-cores">–</span></div>
+        <div class="row"><span class="rl">Total Memory</span><span class="rv" id="d-totalmem">–</span></div>
+        <div class="row"><span class="rl">OS Uptime</span><span class="rv g" id="d-osuptime">–</span></div>
+        <div class="row"><span class="rl">App Uptime</span><span class="rv y" id="d-appuptime">–</span></div>
+      </div>
+
+      <!-- resource usage (real data, live) -->
+      <div class="ic">
+        <div class="ic-head">
+          <div class="ic-dot g"></div>Resource Usage
+          <span class="live-badge"><span class="live-dot"></span>LIVE</span>
+        </div>
+
+        <div class="pb">
+          <div class="pb-head">
+            <span class="pb-lbl">CPU</span>
+            <span class="pb-pct" id="cpu-pct" style="color:#a78bfa">–%</span>
+          </div>
+          <div class="pb-bg"><div class="pb-fill f1" id="cpu-bar"></div></div>
+        </div>
+
+        <div class="pb">
+          <div class="pb-head">
+            <span class="pb-lbl">Memory</span>
+            <span class="pb-pct" id="mem-pct" style="color:#86efac">–%</span>
+          </div>
+          <div class="pb-bg"><div class="pb-fill f2" id="mem-bar"></div></div>
+        </div>
+
+        <div class="pb">
+          <div class="pb-head">
+            <span class="pb-lbl">Disk</span>
+            <span class="pb-pct" id="disk-pct" style="color:#fca5a5">–%</span>
+          </div>
+          <div class="pb-bg"><div class="pb-fill f3" id="disk-bar"></div></div>
+        </div>
+
+        <div class="pb">
+          <div class="pb-head">
+            <span class="pb-lbl">Network I/O</span>
+            <span class="pb-pct" id="net-pct" style="color:#fde68a">–%</span>
+          </div>
+          <div class="pb-bg"><div class="pb-fill f4" id="net-bar"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- row 2 -->
+    <div class="grid2">
+
+      <!-- deployment (real env vars) -->
+      <div class="ic">
+        <div class="ic-head"><div class="ic-dot p"></div>Deployment</div>
+        <div class="row"><span class="rl">Environment</span><span class="rv" id="d-env">–</span></div>
+        <div class="row"><span class="rl">Region</span><span class="rv" id="d-region">–</span></div>
+        <div class="row"><span class="rl">Server Name</span><span class="rv p"><%= server %></span></div>
+        <div class="row"><span class="rl">CPU Model</span><span class="rv" id="d-cpumodel" style="font-size:11px;text-align:right;max-width:55%">–</span></div>
+        <div class="row"><span class="rl">Free Memory</span><span class="rv g" id="d-freemem">–</span></div>
+        <div class="row"><span class="rl">Build</span><span class="rv p" id="d-version">–</span></div>
+      </div>
+
+      <!-- activity -->
+      <div class="ic">
+        <div class="ic-head"><div class="ic-dot g"></div>Recent Activity</div>
+        <div class="act"><div class="act-dot g"></div><span class="act-text">Health check passed</span><span class="act-time">just now</span></div>
+        <div class="act"><div class="act-dot p"></div><span class="act-text"><%= user %> signed in</span><span class="act-time" id="loginTime">--:--</span></div>
+        <div class="act"><div class="act-dot g"></div><span class="act-text">Load balancer synced</span><span class="act-time">3m ago</span></div>
+        <div class="act"><div class="act-dot y"></div><span class="act-text">Cache invalidated</span><span class="act-time">11m ago</span></div>
+        <div class="act"><div class="act-dot g"></div><span class="act-text">Stats API polled</span><span class="act-time" id="lastPoll">–</span></div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    Handled by <span><%= server %></span> &nbsp;·&nbsp;
+    Region: <span id="f-region">–</span> &nbsp;·&nbsp;
+    <span>ControlHub</span> <span id="f-version">–</span>
+  </footer>
+</div>
+
+<script>
+/* ─── Particle network ─── */
+const canvas = document.getElementById('particle-canvas');
+const ctx    = canvas.getContext('2d');
+let W, H, particles = [];
+function resize(){ W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+resize(); window.addEventListener('resize', resize);
+class Particle {
+  constructor(){ this.reset(); }
+  reset(){
+    this.x=Math.random()*W; this.y=Math.random()*H;
+    this.r=Math.random()*1.5+.3;
+    this.vx=(Math.random()-.5)*.3; this.vy=(Math.random()-.5)*.3;
+    this.alpha=Math.random()*.5+.1; this.hue=220+Math.random()*60;
+  }
+  update(){ this.x+=this.vx; this.y+=this.vy; if(this.x<0||this.x>W||this.y<0||this.y>H) this.reset(); }
+  draw(){ ctx.beginPath(); ctx.arc(this.x,this.y,this.r,0,Math.PI*2); ctx.fillStyle=`hsla(${this.hue},80%,70%,${this.alpha})`; ctx.fill(); }
+}
+for(let i=0;i<80;i++) particles.push(new Particle());
+function drawLines(){
+  for(let i=0;i<particles.length;i++) for(let j=i+1;j<particles.length;j++){
+    const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y, d=Math.sqrt(dx*dx+dy*dy);
+    if(d<80){ ctx.beginPath(); ctx.moveTo(particles[i].x,particles[i].y); ctx.lineTo(particles[j].x,particles[j].y); ctx.strokeStyle=`rgba(99,102,241,${.15*(1-d/80)})`; ctx.lineWidth=.5; ctx.stroke(); }
+  }
+}
+function animate(){ ctx.clearRect(0,0,W,H); particles.forEach(p=>{p.update();p.draw();}); drawLines(); requestAnimationFrame(animate); }
+animate();
+
+/* ─── Clock ─── */
+function tick(){ document.getElementById('hclock').textContent = new Date().toLocaleTimeString(); }
+tick(); setInterval(tick, 1000);
+
+/* ─── Login timestamp ─── */
+document.getElementById('loginTime').textContent = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+
+/* ─── Toast ─── */
+function showToast(msg, color){
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  document.getElementById('toast-dot').style.background = color || '#22c55e';
+  t.classList.add('show');
+  setTimeout(()=> t.classList.remove('show'), 3000);
+}
+
+/* ─── Helper: set bar + pct with colour warning ─── */
+function setBar(barId, pctId, value, pctColor) {
+  if (value === null || value === undefined) return;
+  const bar = document.getElementById(barId);
+  const pct = document.getElementById(pctId);
+  bar.style.width = value + '%';
+  pct.textContent = value + '%';
+  // colour-code by threshold
+  pct.className = 'pb-pct' + (value >= 90 ? ' crit' : value >= 75 ? ' warn' : '');
+  if (!pct.className.includes('crit') && !pct.className.includes('warn')) {
+    pct.style.color = pctColor;
+  } else {
+    pct.style.color = '';
+  }
+}
+
+/* ─── Live stats poll ─── */
+async function fetchStats() {
+  try {
+    const res  = await fetch('/api/stats');
+    const data = await res.json();
+
+    // bars
+    setBar('cpu-bar',  'cpu-pct',  data.cpu,  '#a78bfa');
+    setBar('mem-bar',  'mem-pct',  data.mem,  '#86efac');
+    setBar('disk-bar', 'disk-pct', data.disk, '#fca5a5');
+    setBar('net-bar',  'net-pct',  data.net !== null ? data.net : 0, '#fde68a');
+
+    // server info panel
+    document.getElementById('d-hostname').textContent  = data.hostname;
+    document.getElementById('d-platform').textContent  = data.platform + ' / ' + data.arch;
+    document.getElementById('d-cores').textContent     = data.cpuCores + ' cores';
+    document.getElementById('d-totalmem').textContent  = data.totalMem + ' GB';
+    document.getElementById('d-osuptime').textContent  = data.osUptime;
+    document.getElementById('d-appuptime').textContent = data.appUptime;
+    document.getElementById('d-cpumodel').textContent  = data.cpuModel;
+    document.getElementById('d-freemem').textContent   = data.freeMem + ' GB free';
+
+    // top cards
+    document.getElementById('s-hostname').textContent = data.hostname;
+    document.getElementById('s-load').textContent     = data.loadAvg[0];
+
+    // deployment panel (from API so no EJS vars needed)
+    if (document.getElementById('d-env'))     document.getElementById('d-env').textContent     = data.env     || 'production';
+    if (document.getElementById('d-region'))  document.getElementById('d-region').textContent  = data.region  || '–';
+    if (document.getElementById('d-version')) document.getElementById('d-version').textContent = data.version || '–';
+
+    // footer
+    if (document.getElementById('f-region'))  document.getElementById('f-region').textContent  = data.region  || '–';
+    if (document.getElementById('f-version')) document.getElementById('f-version').textContent = data.version || '–';
+
+    // last poll time in activity feed
+    document.getElementById('lastPoll').textContent = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
+  } catch(e) {
+    console.warn('Stats fetch failed:', e);
+  }
+}
+
+// initial fetch + repeat every 3s
+fetchStats();
+setInterval(fetchStats, 3000);
+
+// welcome toast
+setTimeout(() => showToast('Welcome back, <%= user %>! Live stats active.', '#6366f1'), 700);
+</script>
 </body>
 </html>
