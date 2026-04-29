@@ -165,25 +165,10 @@ html,body{
 /* ── Form title ── */
 .form-title{
   font-size:22px;font-weight:800;color:var(--teal);
-  text-align:center;margin-bottom:16px;letter-spacing:-.3px;
+  text-align:center;margin-bottom:24px;letter-spacing:-.3px;
 }
 
-/* ── Social icons ── */
-.social-row{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px}
-.soc-btn{
-  width:40px;height:40px;border-radius:50%;border:1px solid #e0e0e0;
-  background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:border-color .2s,box-shadow .2s,transform .15s;
-  color:#666;
-}
-.soc-btn:hover{border-color:var(--teal);box-shadow:0 4px 12px rgba(57,197,187,.2);transform:translateY(-2px)}
-.soc-btn svg{width:16px;height:16px}
 
-.or-line{
-  display:flex;align-items:center;gap:10px;
-  color:var(--text-light);font-size:12px;margin-bottom:14px;
-}
-.or-line::before,.or-line::after{content:'';flex:1;height:1px;background:#e8e8e8}
 
 /* ── Server message ── */
 .srv-msg{
@@ -317,19 +302,7 @@ html,body{
 
       <div class="form-title">Sign in to Cloud MIN</div>
 
-      <div class="social-row">
-        <button class="soc-btn" title="Facebook">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
-        </button>
-        <button class="soc-btn" title="Google">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-        </button>
-        <button class="soc-btn" title="LinkedIn">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
-        </button>
-      </div>
 
-      <div class="or-line">or use your email account:</div>
 
       <% if (locals.error && locals.tab === 'login') { %>
       <div class="srv-msg err">
@@ -395,19 +368,7 @@ html,body{
 
       <div class="form-title">Create Account</div>
 
-      <div class="social-row">
-        <button class="soc-btn" title="Facebook">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
-        </button>
-        <button class="soc-btn" title="Google">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-        </button>
-        <button class="soc-btn" title="LinkedIn">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
-        </button>
-      </div>
 
-      <div class="or-line">or use your email for registration:</div>
 
       <% if (locals.error && locals.tab === 'signup') { %>
       <div class="srv-msg err">
