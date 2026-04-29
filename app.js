@@ -3,15 +3,30 @@ const bodyParser = require('body-parser');
 const os         = require('os');
 const fs         = require('fs');
 const path       = require('path');
-
+const mongoose   = require('mongoose');
+const session    = require('express-session');
+const User = require('./models/userModel');
 const app = express();
 
-// middleware
+// ── Middleware ───────────────────────────────────────────
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 
-// set view engine
+// ── View engine ──────────────────────────────────────────
 app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
+// ── Session middleware ───────────────────────────────────
+app.use(session({
+  secret:            process.env.SESSION_SECRET || 'cloudproject-secret-key-change-in-prod',
+  resave:            false,
+  saveUninitialized: false,
+  cookie: {
+    secure:   process.env.NODE_ENV === 'production' && process.env.HTTPS === 'true',
+    httpOnly: true,
+    maxAge:   24 * 60 * 60 * 1000, // 24 hours
+  },
+}));
 
 // ── Supported AWS regions ────────────────────────────────
 const SUPPORTED_REGIONS = {
@@ -26,11 +41,9 @@ const PORT        = process.env.PORT        || 3000;
 const SERVER_NAME = process.env.SERVER_NAME || 'Server';
 const ENV         = process.env.NODE_ENV    || 'production';
 
-// ── Dynamic region resolution ────────────────────────────
-// Rules:
-//   1. Local development (NODE_ENV=development) → 'Localhost'
-//   2. Production with valid REGION env var     → use that region
-//   3. Production with no/invalid REGION        → fallback to DEFAULT_REGION
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://kscs7755_db_user:Z7JuEBigSxVt65FG@ac-votpwb1-shard-00-00.jkismd9.mongodb.net:27017,ac-votpwb1-shard-00-01.jkismd9.mongodb.net:27017,ac-votpwb1-shard-00-02.jkismd9.mongodb.net:27017/cloudproject?ssl=true&replicaSet=atlas-qx79as-shard-0&authSource=admin&retryWrites=true&w=majority&appName=Cluster0';
+
+
 function resolveRegion(env, regionEnv) {
   if (env === 'development') return 'Localhost';
   return SUPPORTED_REGIONS[regionEnv] || DEFAULT_REGION;
@@ -45,11 +58,25 @@ try {
   BUILD_VERSION = 'v' + (pkg.version || '1.0.0');
 } catch (_) {}
 
-// track server start time for uptime
+// ── Track server start time ──────────────────────────────
 const SERVER_START = Date.now();
 
-// log resolved config on startup
-console.log(`[config] ENV=${ENV} | REGION=${REGION} | SERVER=${SERVER_NAME}`);
+// ── MongoDB connection ───────────────────────────────────
+mongoose.connect(MONGO_URI)
+  .then(() => console.log(`[mongo] Connected → ${MONGO_URI}`))
+  .catch(err => {
+    console.error('[mongo] Connection failed:', err.message);
+    // Don't exit — let the app start so /health still works; routes will return 503
+  });
+
+mongoose.connection.on('disconnected', () => console.warn('[mongo] Disconnected'));
+mongoose.connection.on('reconnected',  () => console.log('[mongo]  Reconnected'));
+
+// ── Auth guard middleware ─────────────────────────────────
+function requireAuth(req, res, next) {
+  if (req.session && req.session.userId) return next();
+  res.redirect('/');
+}
 
 // ── CPU usage helper (compares two samples 200ms apart) ──
 function getCpuUsage() {
@@ -60,9 +87,7 @@ function getCpuUsage() {
       let idle = 0, total = 0;
       cpus1.forEach((cpu, i) => {
         const cpu2 = cpus2[i];
-        for (const type in cpu2.times) {
-          total += cpu2.times[type] - cpu.times[type];
-        }
+        for (const type in cpu2.times) total += cpu2.times[type] - cpu.times[type];
         idle += cpu2.times.idle - cpu.times.idle;
       });
       resolve(Math.round((1 - idle / total) * 100));
@@ -70,14 +95,14 @@ function getCpuUsage() {
   });
 }
 
-// ── Memory usage ──
+// ── Memory usage ──────────────────────────────────────────
 function getMemUsage() {
   const total = os.totalmem();
   const free  = os.freemem();
   return Math.round(((total - free) / total) * 100);
 }
 
-// ── Disk usage (Linux/Mac only via df) ──
+// ── Disk usage (Linux/Mac only via df) ───────────────────
 function getDiskUsage() {
   return new Promise(resolve => {
     const { exec } = require('child_process');
@@ -88,7 +113,7 @@ function getDiskUsage() {
   });
 }
 
-// ── Network bytes helper ──
+// ── Network bytes helper ─────────────────────────────────
 function getNetworkBytes() {
   return new Promise(resolve => {
     fs.readFile('/proc/net/dev', 'utf8', (err, data) => {
@@ -97,7 +122,7 @@ function getNetworkBytes() {
       const lines = data.trim().split('\n').slice(2);
       lines.forEach(line => {
         const parts = line.trim().split(/\s+/);
-        if (parts[0].startsWith('lo')) return; // skip loopback
+        if (parts[0].startsWith('lo')) return;
         rxTotal += parseInt(parts[1]) || 0;
         txTotal += parseInt(parts[9]) || 0;
       });
@@ -106,41 +131,38 @@ function getNetworkBytes() {
   });
 }
 
-// store previous network sample for delta calculation
-let prevNet = null;
+let prevNet     = null;
 let prevNetTime = null;
 
-// ── /api/stats — real system data ──────────────────────
-app.get('/api/stats', async (req, res) => {
+// ── /api/stats ───────────────────────────────────────────
+app.get('/api/stats', requireAuth, async (req, res) => {
   try {
     const [cpu, disk, netNow] = await Promise.all([
       getCpuUsage(),
       getDiskUsage(),
-      getNetworkBytes()
+      getNetworkBytes(),
     ]);
 
     const mem = getMemUsage();
 
-    // calculate network throughput as % of a 1Gbps baseline
     let netPct = null;
     const now = Date.now();
     if (prevNet && netNow) {
-      const dt      = (now - prevNetTime) / 1000; // seconds
-      const rxDelta = (netNow.rx - prevNet.rx) / dt; // bytes/s
+      const dt      = (now - prevNetTime) / 1000;
+      const rxDelta = (netNow.rx - prevNet.rx) / dt;
       const txDelta = (netNow.tx - prevNet.tx) / dt;
-      const maxBytes = 125_000_000; // 1 Gbps in bytes/s
+      const maxBytes = 125_000_000;
       netPct = Math.min(100, Math.round(((rxDelta + txDelta) / maxBytes) * 100));
     }
     prevNet     = netNow;
     prevNetTime = now;
 
-    // system uptime (seconds the OS has been running)
     const osUptimeSec  = Math.floor(os.uptime());
     const appUptimeSec = Math.floor((Date.now() - SERVER_START) / 1000);
 
     const fmt = s => {
-      const h = Math.floor(s / 3600);
-      const m = Math.floor((s % 3600) / 60);
+      const h   = Math.floor(s / 3600);
+      const m   = Math.floor((s % 3600) / 60);
       const sec = s % 60;
       return [h, m, sec].map(v => String(v).padStart(2, '0')).join(':');
     };
@@ -149,41 +171,161 @@ app.get('/api/stats', async (req, res) => {
       cpu,
       mem,
       disk,
-      net:        netPct,
-      osUptime:   fmt(osUptimeSec),
-      appUptime:  fmt(appUptimeSec),
-      hostname:   os.hostname(),
-      platform:   os.platform(),
-      arch:       os.arch(),
-      cpuModel:   os.cpus()[0]?.model || 'Unknown',
-      cpuCores:   os.cpus().length,
-      totalMem:   Math.round(os.totalmem() / 1024 / 1024 / 1024 * 10) / 10, // GB
-      freeMem:    Math.round(os.freemem()  / 1024 / 1024 / 1024 * 10) / 10,
-      loadAvg:    os.loadavg().map(v => v.toFixed(2)),
-      version:    BUILD_VERSION,
-      region:     REGION,
-      env:        ENV,
-      server:     SERVER_NAME,
+      net:       netPct,
+      osUptime:  fmt(osUptimeSec),
+      appUptime: fmt(appUptimeSec),
+      hostname:  os.hostname(),
+      platform:  os.platform(),
+      arch:      os.arch(),
+      cpuModel:  os.cpus()[0]?.model || 'Unknown',
+      cpuCores:  os.cpus().length,
+      totalMem:  Math.round(os.totalmem() / 1024 / 1024 / 1024 * 10) / 10,
+      freeMem:   Math.round(os.freemem()  / 1024 / 1024 / 1024 * 10) / 10,
+      loadAvg:   os.loadavg().map(v => v.toFixed(2)),
+      version:   BUILD_VERSION,
+      region:    REGION,
+      env:       ENV,
+      server:    SERVER_NAME,
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-// ── Login page ──────────────────────────────────────────
+// ── GET / — Login/Signup page ─────────────────────────────
 app.get('/', (req, res) => {
-  res.render('login');
+  // Already logged in → go straight to dashboard
+  if (req.session && req.session.userId) {
+    return res.redirect(`/dashboard/${encodeURIComponent(req.session.username)}`);
+  }
+  res.render('login', { error: null, success: null, tab: 'login' });
 });
 
-// ── Handle login ────────────────────────────────────────
-app.post('/login', (req, res) => {
+// ── POST /signup ──────────────────────────────────────────
+app.post('/signup', async (req, res) => {
   const username = (req.body.username || '').trim();
-  if (!username || username.length < 3) return res.redirect('/');
-  res.redirect('/dashboard/' + encodeURIComponent(username));
+  const password = (req.body.password || '').trim();
+
+  if (!username || username.length < 3) {
+    return res.render('login', {
+      error:   'Username must be at least 3 characters.',
+      success: null,
+      tab:     'signup',
+    });
+  }
+  if (!password || password.length < 6) {
+    return res.render('login', {
+      error:   'Password must be at least 6 characters.',
+      success: null,
+      tab:     'signup',
+    });
+  }
+
+  // Check if MongoDB is connected
+  if (mongoose.connection.readyState !== 1) {
+    return res.render('login', {
+      error:   'Database unavailable. Please try again later.',
+      success: null,
+      tab:     'signup',
+    });
+  }
+
+  try {
+    const existing = await User.findOne({ username });
+    if (existing) {
+      return res.render('login', {
+        error:   `Username "${username}" is already taken. Choose another.`,
+        success: null,
+        tab:     'signup',
+      });
+    }
+
+    const user = new User({ username, password });
+    await user.save();
+
+    // Auto-login after signup
+    req.session.userId   = user._id;
+    req.session.username = user.username;
+    res.redirect(`/dashboard/${encodeURIComponent(user.username)}`);
+
+  } catch (err) {
+    console.error('[signup] Error:', err.message);
+    res.render('login', {
+      error:   'Something went wrong. Please try again.',
+      success: null,
+      tab:     'signup',
+    });
+  }
 });
 
-// ── Dashboard ────────────────────────────────────────────
-app.get('/dashboard/:user', (req, res) => {
+// ── POST /login ───────────────────────────────────────────
+app.post('/login', async (req, res) => {
+  const username = (req.body.username || '').trim();
+  const password = (req.body.password || '').trim();
+
+  if (!username || !password) {
+    return res.render('login', {
+      error:   'Username and password are required.',
+      success: null,
+      tab:     'login',
+    });
+  }
+
+  // Check if MongoDB is connected
+  if (mongoose.connection.readyState !== 1) {
+    return res.render('login', {
+      error:   'Database unavailable. Please try again later.',
+      success: null,
+      tab:     'login',
+    });
+  }
+
+  try {
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.render('login', {
+        error:   'Invalid username or password.',
+        success: null,
+        tab:     'login',
+      });
+    }
+
+    const match = await user.comparePassword(password);
+    if (!match) {
+      return res.render('login', {
+        error:   'Invalid username or password.',
+        success: null,
+        tab:     'login',
+      });
+    }
+
+    // Regenerate session to prevent fixation attacks
+    req.session.regenerate(err => {
+      if (err) {
+        return res.render('login', { error: 'Session error. Try again.', success: null, tab: 'login' });
+      }
+      req.session.userId   = user._id;
+      req.session.username = user.username;
+      res.redirect(`/dashboard/${encodeURIComponent(user.username)}`);
+    });
+
+  } catch (err) {
+    console.error('[login] Error:', err.message);
+    res.render('login', {
+      error:   'Something went wrong. Please try again.',
+      success: null,
+      tab:     'login',
+    });
+  }
+});
+
+// ── GET /logout ───────────────────────────────────────────
+app.get('/logout', (req, res) => {
+  req.session.destroy(() => res.redirect('/'));
+});
+
+// ── Dashboard ─────────────────────────────────────────────
+app.get('/dashboard/:user', requireAuth, (req, res) => {
   res.render('dashboard', {
     user:    decodeURIComponent(req.params.user),
     server:  SERVER_NAME,
@@ -193,7 +335,7 @@ app.get('/dashboard/:user', (req, res) => {
   });
 });
 
-// ── Social auth placeholders ─────────────────────────────
+// ── Social auth placeholders ──────────────────────────────
 app.get('/auth/google', (req, res) => {
   // TODO: replace with real passport-google-oauth20
   res.redirect('/dashboard/GoogleUser');
@@ -204,12 +346,18 @@ app.get('/auth/github', (req, res) => {
   res.redirect('/dashboard/GitHubUser');
 });
 
-// ── Health check ─────────────────────────────────────────
+// ── Health check ──────────────────────────────────────────
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', uptime: process.uptime() });
+  const dbState = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+  res.status(200).json({
+    status:   'ok',
+    uptime:   process.uptime(),
+    database: dbState[mongoose.connection.readyState] || 'unknown',
+  });
 });
 
-// ── Start ────────────────────────────────────────────────
+// ── Start ─────────────────────────────────────────────────
 app.listen(PORT, () => {
+  console.log(`[config] ENV=${ENV} | REGION=${REGION} | SERVER=${SERVER_NAME}`);
   console.log(`${SERVER_NAME} running on http://localhost:${PORT}`);
 });

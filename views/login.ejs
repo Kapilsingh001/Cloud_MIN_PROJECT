@@ -3,829 +3,628 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Cloud MIN · Login</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>Cloud MIN · Access</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --teal:#39c5bb;
+  --teal-dark:#2ba8a0;
+  --teal-light:#5dd4cc;
+  --text-dark:#333;
+  --text-mid:#666;
+  --text-light:#999;
+  --bg:#f0f4f8;
+  --white:#ffffff;
+  --error:#e74c3c;
+  --success:#27ae60;
+  --shadow:0 20px 60px rgba(0,0,0,.12);
+  --radius:20px;
+}
+
 html,body{
-  height:100%;font-family:'DM Sans',sans-serif;
-  background:#0d0a1a;
+  height:100%;min-height:100vh;
+  font-family:'Nunito',sans-serif;
+  background:var(--bg);
   display:flex;align-items:center;justify-content:center;
   overflow:hidden;
-  min-height:100vh;
 }
 
-/* ── Background canvas ── */
-#bg-canvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+/* ── Decorative background shapes ── */
+.bg-shapes{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.shape{position:absolute;border-radius:50%;opacity:.08}
+.shape-1{width:500px;height:500px;background:var(--teal);top:-150px;right:-100px;animation:drift 14s ease-in-out infinite}
+.shape-2{width:300px;height:300px;background:#e74c7c;bottom:-80px;left:-60px;animation:drift 18s ease-in-out infinite reverse}
+.shape-3{width:200px;height:200px;background:#f59e0b;bottom:100px;right:200px;animation:drift 10s ease-in-out infinite 2s}
+.shape-4{width:150px;height:150px;background:var(--teal);top:200px;left:100px;animation:drift 12s ease-in-out infinite 4s}
+@keyframes drift{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(20px,-20px) scale(1.04)}66%{transform:translate(-15px,15px) scale(.97)}}
 
-/* ── Sakura petals ── */
-.petal{
-  position:fixed;pointer-events:none;z-index:1;
-  width:12px;height:12px;
-  border-radius:50% 0 50% 0;
-  background:linear-gradient(135deg,#ffb7c5,#ff85a1);
-  opacity:0;
-  animation:fall linear infinite;
-}
-@keyframes fall{
-  0%{transform:translateY(-20px) rotate(0deg);opacity:.8}
-  100%{transform:translateY(110vh) rotate(720deg);opacity:0}
-}
-
-/* ── Toast ── */
-.toast{
-  position:fixed;top:22px;left:50%;
-  transform:translateX(-50%) translateY(-80px);
-  background:rgba(20,10,40,.95);border:1px solid rgba(255,150,200,.25);
-  border-radius:10px;padding:11px 18px;
-  color:#ffe4f0;font-size:13px;white-space:nowrap;
-  display:flex;align-items:center;gap:8px;
-  transition:transform .4s cubic-bezier(.22,1,.36,1),opacity .4s;
-  opacity:0;z-index:200;
-  box-shadow:0 8px 32px rgba(255,100,180,.15);
-}
-.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-.toast-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-
-/* ── Page ── */
-.page{
+/* ── Card ── */
+.card{
   position:relative;z-index:10;
-  display:flex;align-items:flex-end;gap:0;
-  animation:pageIn .9s cubic-bezier(.22,1,.36,1) both;
+  width:760px;max-width:96vw;
+  height:500px;
+  background:var(--white);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  display:flex;
 }
-@keyframes pageIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
 
-/* ── Character wrap ── */
-.char-wrap{
-  position:relative;
-  width:210px;flex-shrink:0;
-  align-self:flex-end;
-  margin-right:-22px;
-  z-index:2;
+/* ── Panels ── */
+.panel-form{
+  width:50%;padding:40px 44px;
+  display:flex;flex-direction:column;
+  position:relative;z-index:2;
+  background:var(--white);
+  transition:transform .6s cubic-bezier(.77,0,.18,1),opacity .4s ease;
 }
-.char-svg{
-  width:210px;
-  filter:drop-shadow(0 12px 32px rgba(255,100,180,.4));
-  animation:charFloat 3.5s ease-in-out infinite;
+.panel-welcome{
+  width:50%;position:relative;
+  background:linear-gradient(135deg,var(--teal) 0%,#2bc0b4 60%,#1fa89e 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:40px 36px;overflow:hidden;
+  transition:transform .6s cubic-bezier(.77,0,.18,1);
+  flex-shrink:0;
 }
-@keyframes charFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
 
-/* Shadow */
-.char-shadow{
-  width:100px;height:12px;margin:0 auto;
-  background:radial-gradient(ellipse,rgba(255,100,180,.3) 0%,transparent 70%);
-  animation:shadowFloat 3.5s ease-in-out infinite;
+/* Welcome panel decorative shapes */
+.panel-welcome::before{
+  content:'';position:absolute;width:200px;height:200px;border-radius:50%;
+  background:rgba(255,255,255,.08);bottom:-60px;right:-60px;
 }
-@keyframes shadowFloat{0%,100%{transform:scaleX(1);opacity:.6}50%{transform:scaleX(.75);opacity:.25}}
-
-/* eyes react */
-.eyes-normal{display:block}
-.eyes-shy{display:none}
-.eyes-happy{display:none}
-body.peeking .eyes-normal{display:none}
-body.peeking .eyes-shy{display:block}
-body.success-state .eyes-normal{display:none}
-body.success-state .eyes-happy{display:block}
-
-/* blush */
-.blush{opacity:0;transition:opacity .5s}
-body.peeking .blush{opacity:1}
-body.success-state .blush{opacity:1}
-
-/* ── Login card ── */
-.login-card{
-  background:rgba(15,8,35,.82);
-  border:1px solid rgba(255,150,200,.18);
-  border-radius:22px;
-  padding:38px 34px 34px;
-  width:360px;
-  backdrop-filter:blur(28px);
-  position:relative;overflow:hidden;
-  box-shadow:
-    0 40px 80px rgba(0,0,0,.6),
-    0 0 0 1px rgba(255,150,200,.06) inset,
-    0 0 60px rgba(255,100,180,.06);
-  z-index:1;
+.panel-welcome::after{
+  content:'';position:absolute;width:120px;height:120px;border-radius:50%;
+  background:rgba(255,255,255,.06);top:40px;left:-30px;
 }
-/* top shimmer */
-.login-card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(255,130,180,.7) 35%,rgba(200,100,255,1) 50%,rgba(255,130,180,.7) 65%,transparent);
-  animation:shim 4s ease-in-out infinite;
+.welcome-diamond{
+  position:absolute;width:60px;height:60px;
+  background:rgba(255,255,255,.1);
+  transform:rotate(45deg);
+  top:60px;right:60px;
+  animation:spin-slow 20s linear infinite;
 }
-@keyframes shim{0%,100%{opacity:.3}50%{opacity:1}}
+.welcome-diamond2{
+  position:absolute;width:35px;height:35px;
+  background:rgba(255,255,255,.08);
+  transform:rotate(45deg);
+  bottom:90px;left:50px;
+  animation:spin-slow 14s linear infinite reverse;
+}
+@keyframes spin-slow{to{transform:rotate(405deg)}}
 
-/* card inner glow */
-.login-card::after{
-  content:'';position:absolute;bottom:-60px;right:-60px;
-  width:180px;height:180px;border-radius:50%;
-  background:radial-gradient(circle,rgba(255,100,180,.08) 0%,transparent 70%);
+.welcome-title{
+  font-size:28px;font-weight:800;color:#fff;
+  text-align:center;margin-bottom:14px;letter-spacing:-.3px;
+  position:relative;z-index:1;
+  animation:fadeInUp .5s ease both;
+}
+.welcome-sub{
+  font-size:13.5px;color:rgba(255,255,255,.85);
+  text-align:center;line-height:1.6;
+  position:relative;z-index:1;
+  margin-bottom:28px;
+  animation:fadeInUp .5s .1s ease both;
+}
+.welcome-btn{
+  position:relative;z-index:1;
+  border:2px solid #fff;background:transparent;
+  color:#fff;font-family:'Nunito',sans-serif;
+  font-size:13px;font-weight:800;letter-spacing:1.2px;
+  padding:12px 38px;border-radius:50px;cursor:pointer;
+  text-transform:uppercase;
+  transition:background .2s,color .2s,transform .15s,box-shadow .2s;
+  animation:fadeInUp .5s .2s ease both;
+}
+.welcome-btn:hover{
+  background:#fff;color:var(--teal);
+  transform:scale(1.04);
+  box-shadow:0 8px 24px rgba(0,0,0,.15);
+}
+
+/* ── Card states — sign-in (default) vs sign-up ── */
+/* Default: form-left, welcome-right */
+.card{flex-direction:row}
+
+/* Signup mode: welcome-left, form-right */
+.card.signup-mode{flex-direction:row-reverse}
+
+/* Sliding animation */
+.card .panel-form{
+  animation:none;
+}
+.card.animating .panel-form{
+  animation:slideForm .6s cubic-bezier(.77,0,.18,1) both;
+}
+.card.animating .panel-welcome{
+  animation:slideWelcome .6s cubic-bezier(.77,0,.18,1) both;
+}
+@keyframes slideForm{from{opacity:.6;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideWelcome{from{opacity:.6;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+.card.signup-mode.animating .panel-form{
+  animation:slideFormR .6s cubic-bezier(.77,0,.18,1) both;
+}
+.card.signup-mode.animating .panel-welcome{
+  animation:slideWelcomeR .6s cubic-bezier(.77,0,.18,1) both;
+}
+@keyframes slideFormR{from{opacity:.6;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideWelcomeR{from{opacity:.6;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
+
+/* ── Logo ── */
+.logo{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.logo-icon{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,var(--teal),#2ba8a0);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 12px rgba(57,197,187,.35);
+}
+.logo-icon svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round}
+.logo-text{font-size:15px;font-weight:700;color:var(--text-dark);letter-spacing:-.2px}
+
+/* ── Form title ── */
+.form-title{
+  font-size:22px;font-weight:800;color:var(--teal);
+  text-align:center;margin-bottom:16px;letter-spacing:-.3px;
+}
+
+/* ── Social icons ── */
+.social-row{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px}
+.soc-btn{
+  width:40px;height:40px;border-radius:50%;border:1px solid #e0e0e0;
+  background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:border-color .2s,box-shadow .2s,transform .15s;
+  color:#666;
+}
+.soc-btn:hover{border-color:var(--teal);box-shadow:0 4px 12px rgba(57,197,187,.2);transform:translateY(-2px)}
+.soc-btn svg{width:16px;height:16px}
+
+.or-line{
+  display:flex;align-items:center;gap:10px;
+  color:var(--text-light);font-size:12px;margin-bottom:14px;
+}
+.or-line::before,.or-line::after{content:'';flex:1;height:1px;background:#e8e8e8}
+
+/* ── Server message ── */
+.srv-msg{
+  border-radius:10px;padding:9px 13px;font-size:12px;
+  margin-bottom:12px;display:flex;align-items:center;gap:8px;
+}
+.srv-msg.err{background:#fef2f2;border:1px solid #fca5a5;color:var(--error)}
+.srv-msg.ok{background:#f0fdf4;border:1px solid #86efac;color:var(--success)}
+.srv-msg svg{width:13px;height:13px;flex-shrink:0}
+
+/* ── Inputs ── */
+.field{margin-bottom:12px;position:relative}
+.inp-wrap{position:relative;display:flex;align-items:center}
+.inp-ico{
+  position:absolute;left:13px;
   pointer-events:none;
+  color:#bbb;transition:color .2s;
 }
-
-.login-title{color:#fff5ff;font-size:21px;font-weight:700;letter-spacing:-.4px;margin-bottom:3px}
-.login-sub{color:rgba(255,200,230,.38);font-size:12.5px;margin-bottom:28px}
-
-/* ── Fields ── */
-.field{margin-bottom:14px}
-.field-label{
-  display:block;color:rgba(255,180,220,.5);
-  font-size:10.5px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;
-  margin-bottom:7px;transition:color .2s;
-}
-.field:focus-within .field-label{color:#f472b6}
-.input-row{position:relative}
-.input-ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);pointer-events:none}
-.input-ico svg{width:15px;height:15px;stroke:rgba(255,180,220,.3);transition:stroke .2s}
-.field:focus-within .input-ico svg{stroke:#f472b6}
-
+.inp-ico svg{width:15px;height:15px;display:block}
 .field-input{
-  width:100%;height:47px;
-  background:rgba(255,255,255,.04);
-  border:1px solid rgba(255,150,200,.14);
-  border-radius:12px;
-  color:#fff5ff;font-size:14px;font-family:'DM Sans',sans-serif;
-  padding:0 40px 0 40px;
+  width:100%;height:44px;
+  border:1.5px solid #e5e7eb;border-radius:50px;
+  background:#f8f9fa;
+  padding:0 42px 0 40px;
+  font-family:'Nunito',sans-serif;font-size:13.5px;color:var(--text-dark);
   outline:none;
   transition:border-color .2s,background .2s,box-shadow .2s;
 }
-.field-input::placeholder{color:rgba(255,180,220,.22)}
+.field-input::placeholder{color:#bbb}
+.field-input:hover{background:#fff;border-color:#d1d5db}
 .field-input:focus{
-  border-color:#c084fc;
-  background:rgba(192,132,252,.07);
-  box-shadow:0 0 0 3px rgba(192,132,252,.14);
+  border-color:var(--teal);background:#fff;
+  box-shadow:0 0 0 3px rgba(57,197,187,.12);
 }
-.field-input.error{border-color:#fb7185;box-shadow:0 0 0 3px rgba(251,113,133,.1)}
-.field-input.success{border-color:#4ade80;box-shadow:0 0 0 3px rgba(74,222,128,.1)}
+.field-input:focus~.inp-ico,.inp-wrap:focus-within .inp-ico{color:var(--teal)}
+.field-input.err{border-color:var(--error);box-shadow:0 0 0 3px rgba(231,76,60,.1)}
+.field-input.ok{border-color:var(--success)}
+.field-msg{font-size:11px;color:var(--error);padding-left:14px;min-height:16px;margin-top:2px}
+.field-msg.ok{color:var(--success)}
 
-.field-msg{font-size:11px;margin-top:4px;min-height:15px;padding-left:3px;transition:all .2s}
-.field-msg.err{color:#fb7185}.field-msg.ok{color:#86efac}
-
-/* eye toggle */
+/* Eye toggle */
 .eye-btn{
-  position:absolute;right:11px;top:50%;transform:translateY(-50%);
-  background:none;border:none;cursor:pointer;padding:4px;
-  color:rgba(255,180,220,.3);transition:color .2s;
+  position:absolute;right:13px;background:none;border:none;cursor:pointer;
+  color:#bbb;padding:3px;transition:color .2s;
 }
-.eye-btn:hover{color:rgba(255,180,220,.8)}
-.eye-btn svg{width:15px;height:15px;display:block}
+.eye-btn:hover{color:var(--teal)}
+.eye-btn svg{width:14px;height:14px;display:block}
 
-/* strength */
-.s-bar-wrap{margin-top:5px;display:none}
-.s-bar-wrap.show{display:block}
-.s-bar-bg{height:3px;background:rgba(255,255,255,.07);border-radius:10px;overflow:hidden}
-.s-bar-fill{height:100%;border-radius:10px;width:0;transition:width .35s,background .35s}
+/* Forgot */
+.forgot-row{text-align:right;margin:-4px 0 14px}
+.forgot{font-size:12px;color:var(--teal);text-decoration:none;font-weight:600;transition:color .15s}
+.forgot:hover{color:var(--teal-dark)}
 
-/* ── Check row ── */
-.check-row{display:flex;align-items:center;justify-content:space-between;margin:14px 0 22px}
-.check-label{display:flex;align-items:center;gap:7px;cursor:pointer;color:rgba(255,180,220,.4);font-size:12.5px;user-select:none}
-.custom-check{
-  width:15px;height:15px;border-radius:4px;
-  border:1.5px solid rgba(255,150,200,.25);background:transparent;
-  display:flex;align-items:center;justify-content:center;
-  transition:all .2s;flex-shrink:0;
-}
-#remember{display:none}
-#remember:checked+.check-label .custom-check{background:#c084fc;border-color:#c084fc}
-.forgot{color:#c084fc;font-size:12.5px;text-decoration:none;transition:color .15s}
-.forgot:hover{color:#e879f9}
-
-/* ── Button ── */
-.btn-login{
-  width:100%;height:50px;border:none;border-radius:13px;
-  background:linear-gradient(135deg,#9333ea,#ec4899);
-  color:#fff;font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;
-  cursor:pointer;position:relative;overflow:hidden;
+/* ── Submit button ── */
+.btn-submit{
+  width:100%;height:46px;border:none;border-radius:50px;
+  background:linear-gradient(135deg,var(--teal),#2ba8a0);
+  color:#fff;font-family:'Nunito',sans-serif;
+  font-size:13px;font-weight:800;letter-spacing:1px;
+  text-transform:uppercase;cursor:pointer;
+  position:relative;overflow:hidden;
   transition:transform .15s,box-shadow .2s;
-  box-shadow:0 6px 24px rgba(236,72,153,.35);
-  letter-spacing:.2px;
+  box-shadow:0 6px 20px rgba(57,197,187,.4);
+  margin-top:4px;
 }
-.btn-login:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(236,72,153,.5)}
-.btn-login:active{transform:translateY(0)}
+.btn-submit:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(57,197,187,.5)}
+.btn-submit:active{transform:translateY(0)}
 .btn-text{transition:opacity .2s}
-.btn-login.loading .btn-text{opacity:0}
-.btn-ripple{position:absolute;inset:0;pointer-events:none;background:rgba(255,255,255,.18);transform:scale(0);border-radius:50%;transition:transform .5s,opacity .5s;opacity:0}
-.btn-login.rippling .btn-ripple{transform:scale(4);opacity:0}
+.btn-submit.loading .btn-text{opacity:0}
 .spinner{
-  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  width:20px;height:20px;
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:18px;height:18px;
   border:2px solid rgba(255,255,255,.3);border-top-color:#fff;
   border-radius:50%;animation:spin .7s linear infinite;
   opacity:0;transition:opacity .2s;
 }
 @keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
-.btn-login.loading .spinner{opacity:1}
+.btn-submit.loading .spinner{opacity:1}
 
-@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+/* ── Panel visibility ── */
+.login-panel,.signup-panel{display:none}
+.login-panel.active,.signup-panel.active{display:flex;flex-direction:column;height:100%}
+
+/* ── Strength bar ── */
+.s-bar-wrap{margin-top:4px;display:none;padding:0 4px}
+.s-bar-wrap.show{display:block}
+.s-bar-bg{height:3px;background:#e5e7eb;border-radius:10px;overflow:hidden}
+.s-bar-fill{height:100%;border-radius:10px;width:0;transition:width .3s,background .3s}
+.s-lbl{font-size:11px;color:var(--text-light);margin-top:3px}
+
+/* ── Shake ── */
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+
+/* ── Animations ── */
+@keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Responsive ── */
+@media(max-width:640px){
+  .card{flex-direction:column!important;height:auto;width:92vw}
+  .panel-form{width:100%;padding:28px 24px}
+  .panel-welcome{width:100%;padding:28px 24px;min-height:160px}
+  .welcome-title{font-size:22px}
+  .card.signup-mode{flex-direction:column-reverse!important}
+}
 </style>
 </head>
 <body>
 
-<canvas id="bg-canvas"></canvas>
-
-<div class="toast" id="toast">
-  <div class="toast-dot" id="toast-dot"></div>
-  <span id="toast-msg"></span>
+<!-- Background shapes -->
+<div class="bg-shapes">
+  <div class="shape shape-1"></div>
+  <div class="shape shape-2"></div>
+  <div class="shape shape-3"></div>
+  <div class="shape shape-4"></div>
 </div>
 
-<div class="page">
+<div class="card" id="main-card">
 
-  <!-- ══════════════════════════════════════
-       JAPANESE ANIME CHARACTER — Pure SVG
-  ══════════════════════════════════════ -->
-  <div class="char-wrap">
-    <svg class="char-svg" viewBox="0 0 210 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- ══ FORM PANEL ══ -->
+  <div class="panel-form" id="panel-form">
 
-      <!-- ── Kimono / body ── -->
-      <!-- main kimono -->
-      <path d="M35 175 Q28 200 25 270 L185 270 Q182 200 175 175 Q150 165 105 163 Q60 165 35 175Z" fill="#e8c5f5"/>
-      <!-- kimono overlap left -->
-      <path d="M105 163 Q85 170 70 195 L95 220 Q100 200 105 185Z" fill="#d4a8f0"/>
-      <!-- kimono overlap right -->
-      <path d="M105 163 Q125 170 140 195 L115 220 Q110 200 105 185Z" fill="#c084f5"/>
-      <!-- obi / belt -->
-      <rect x="55" y="200" width="100" height="22" rx="6" fill="#9333ea"/>
-      <rect x="55" y="200" width="100" height="5" rx="3" fill="#a855f7"/>
-      <!-- obi knot (bow at back, visible as small bow front) -->
-      <ellipse cx="105" cy="211" rx="18" ry="8" fill="#7c3aed"/>
-      <!-- kimono pattern - small sakura shapes on fabric -->
-      <circle cx="60" cy="230" r="4" fill="#f9a8d4" opacity=".5"/>
-      <circle cx="75" cy="250" r="3" fill="#f9a8d4" opacity=".4"/>
-      <circle cx="145" cy="235" r="4" fill="#f9a8d4" opacity=".5"/>
-      <circle cx="158" cy="255" r="3" fill="#f9a8d4" opacity=".4"/>
-      <circle cx="90" cy="245" r="2.5" fill="#e879f9" opacity=".35"/>
-      <circle cx="125" cy="248" r="2.5" fill="#e879f9" opacity=".35"/>
+    <!-- LOGIN panel -->
+    <div class="login-panel" id="login-panel">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <span class="logo-text">Cloud MIN</span>
+      </div>
 
-      <!-- ── Sleeves ── -->
-      <!-- left sleeve (wide furisode) -->
-      <path d="M35 175 Q10 185 8 240 Q20 245 40 235 Q45 210 55 195Z" fill="#e8c5f5"/>
-      <path d="M8 240 Q12 265 30 268 Q40 255 40 235Z" fill="#d4a8f0"/>
-      <!-- left hand peeking -->
-      <ellipse cx="22" cy="268" rx="11" ry="9" fill="#fde8d8"/>
-      <!-- fingers -->
-      <path d="M13 264 Q11 258 14 256" stroke="#f5c5a3" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-      <path d="M16 261 Q14 254 17 252" stroke="#f5c5a3" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      <div class="form-title">Sign in to Cloud MIN</div>
 
-      <!-- right sleeve (waving up) -->
-      <path d="M175 175 Q195 155 205 110 Q200 100 190 105 Q183 145 165 168Z" fill="#e8c5f5">
-        <animateTransform attributeName="transform" type="rotate"
-          values="0 175 175; -8 175 175; 0 175 175" dur="1.4s" repeatCount="indefinite"/>
-      </path>
-      <!-- right hand -->
-      <ellipse cx="205" cy="108" rx="11" ry="9" fill="#fde8d8">
-        <animateTransform attributeName="transform" type="rotate"
-          values="0 175 175; -8 175 175; 0 175 175" dur="1.4s" repeatCount="indefinite"/>
-      </ellipse>
+      <div class="social-row">
+        <button class="soc-btn" title="Facebook">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+        </button>
+        <button class="soc-btn" title="Google">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        </button>
+        <button class="soc-btn" title="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+        </button>
+      </div>
 
-      <!-- ── Neck ── -->
-      <rect x="90" y="148" width="30" height="20" rx="8" fill="#fde8d8"/>
-      <!-- collar left -->
-      <path d="M90 155 Q75 162 65 175" stroke="white" stroke-width="4" stroke-linecap="round" fill="none"/>
-      <!-- collar right -->
-      <path d="M120 155 Q135 162 145 175" stroke="white" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <div class="or-line">or use your email account:</div>
 
-      <!-- ── Head ── -->
-      <ellipse cx="105" cy="100" rx="50" ry="52" fill="#fde8d8"/>
+      <% if (locals.error && locals.tab === 'login') { %>
+      <div class="srv-msg err">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <circle cx="8" cy="8" r="6.5"/><path d="M8 5v3.5M8 11v.5"/>
+        </svg>
+        <%= error %>
+      </div>
+      <% } %>
 
-      <!-- ── Hair - long black with highlight ── -->
-      <!-- back hair (behind head) -->
-      <ellipse cx="105" cy="88" rx="52" ry="40" fill="#1a0a2e"/>
-      <!-- long hair flowing down left -->
-      <path d="M55 95 Q42 130 45 200 Q55 215 65 200 Q60 145 68 110Z" fill="#1a0a2e"/>
-      <!-- long hair flowing down right -->
-      <path d="M155 95 Q168 130 165 200 Q155 215 145 200 Q150 145 142 110Z" fill="#1a0a2e"/>
-      <!-- top / front hair fringe -->
-      <path d="M56 85 Q60 50 105 46 Q150 50 154 85" fill="#1a0a2e"/>
-      <!-- side bangs left -->
-      <path d="M56 85 Q50 100 55 115 Q62 105 65 92Z" fill="#1a0a2e"/>
-      <!-- side bangs right -->
-      <path d="M154 85 Q160 100 155 115 Q148 105 145 92Z" fill="#1a0a2e"/>
-      <!-- fringe strands -->
-      <path d="M80 52 Q76 72 80 85" stroke="#2d1060" stroke-width="5" stroke-linecap="round" fill="none"/>
-      <path d="M93 48 Q90 68 92 82" stroke="#2d1060" stroke-width="5" stroke-linecap="round" fill="none"/>
-      <path d="M107 47 Q105 67 106 80" stroke="#2d1060" stroke-width="5" stroke-linecap="round" fill="none"/>
-      <!-- hair highlight shine -->
-      <ellipse cx="88" cy="66" rx="14" ry="7" fill="#3b1d7a" opacity=".65" transform="rotate(-18 88 66)"/>
-      <ellipse cx="78" cy="60" rx="5" ry="3" fill="#6d28d9" opacity=".5" transform="rotate(-22 78 60)"/>
+      <form id="login-form" action="/login" method="POST" onsubmit="return doSubmit(event,'login')">
+        <div class="field">
+          <div class="inp-wrap">
+            <span class="inp-ico">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <circle cx="8" cy="5.5" r="2.5"/><path d="M2.5 13.5c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/>
+              </svg>
+            </span>
+            <input class="field-input" id="li-user" name="username" type="text"
+                   placeholder="Username" autocomplete="username">
+          </div>
+          <div class="field-msg" id="li-user-msg"></div>
+        </div>
 
-      <!-- ── Hair ornament (kanzashi) ── -->
-      <!-- pin -->
-      <line x1="130" y1="58" x2="148" y2="42" stroke="#d97706" stroke-width="2" stroke-linecap="round"/>
-      <!-- flower top -->
-      <circle cx="149" cy="41" r="7" fill="#fcd34d"/>
-      <circle cx="149" cy="41" r="4" fill="#f59e0b"/>
-      <circle cx="157" cy="38" r="5" fill="#fcd34d"/>
-      <circle cx="157" cy="38" r="3" fill="#f59e0b"/>
-      <circle cx="153" cy="46" r="4" fill="#fcd34d"/>
-      <circle cx="153" cy="46" r="2.5" fill="#f59e0b"/>
-      <!-- sakura petals on pin -->
-      <circle cx="142" cy="44" r="3" fill="#fda4af"/>
-      <circle cx="147" cy="35" r="2.5" fill="#fda4af"/>
+        <div class="field">
+          <div class="inp-wrap">
+            <span class="inp-ico">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <rect x="2" y="7" width="12" height="8" rx="1.5"/><path d="M5 7V5a3 3 0 016 0v2"/>
+              </svg>
+            </span>
+            <input class="field-input" id="li-pass" name="password" type="password"
+                   placeholder="Password" autocomplete="current-password">
+            <button type="button" class="eye-btn" onclick="toggleEye('li-pass','eye-li')">
+              <svg viewBox="0 0 16 16" fill="none" id="eye-li">
+                <path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.5"/>
+              </svg>
+            </button>
+          </div>
+          <div class="field-msg" id="li-pass-msg"></div>
+        </div>
 
-      <!-- ── Ears ── -->
-      <ellipse cx="55" cy="102" rx="8" ry="10" fill="#fde8d8"/>
-      <ellipse cx="155" cy="102" rx="8" ry="10" fill="#fde8d8"/>
-      <ellipse cx="55" cy="102" rx="5" ry="7" fill="#f5c5a3"/>
-      <ellipse cx="155" cy="102" rx="5" ry="7" fill="#f5c5a3"/>
+        <div class="forgot-row">
+          <a href="#" class="forgot">Forgot your password?</a>
+        </div>
 
-      <!-- ── Eyes NORMAL - large anime eyes ── -->
-      <g class="eyes-normal">
-        <!-- eye whites -->
-        <ellipse cx="84" cy="100" rx="15" ry="17" fill="white"/>
-        <ellipse cx="126" cy="100" rx="15" ry="17" fill="white"/>
-        <!-- gradient iris left -->
-        <defs>
-          <radialGradient id="eyeL" cx="40%" cy="35%">
-            <stop offset="0%" stop-color="#a78bfa"/>
-            <stop offset="60%" stop-color="#7c3aed"/>
-            <stop offset="100%" stop-color="#4c1d95"/>
-          </radialGradient>
-          <radialGradient id="eyeR" cx="40%" cy="35%">
-            <stop offset="0%" stop-color="#a78bfa"/>
-            <stop offset="60%" stop-color="#7c3aed"/>
-            <stop offset="100%" stop-color="#4c1d95"/>
-          </radialGradient>
-          <!-- Clip paths for eyes -->
-          <clipPath id="clipL"><ellipse cx="84" cy="100" rx="15" ry="17"/></clipPath>
-          <clipPath id="clipR"><ellipse cx="126" cy="100" rx="15" ry="17"/></clipPath>
-        </defs>
-        <ellipse cx="84" cy="101" rx="11" ry="12" fill="url(#eyeL)"/>
-        <ellipse cx="126" cy="101" rx="11" ry="12" fill="url(#eyeR)"/>
-        <!-- pupils -->
-        <circle cx="85" cy="102" r="6" fill="#1e0a3c"/>
-        <circle cx="127" cy="102" r="6" fill="#1e0a3c"/>
-        <!-- sparkle big -->
-        <circle cx="88" cy="97" r="3.5" fill="white"/>
-        <circle cx="130" cy="97" r="3.5" fill="white"/>
-        <!-- sparkle small -->
-        <circle cx="80" cy="107" r="1.5" fill="rgba(255,255,255,.6)"/>
-        <circle cx="122" cy="107" r="1.5" fill="rgba(255,255,255,.6)"/>
-        <!-- bottom eyelid shimmer -->
-        <path d="M70 110 Q84 116 98 110" stroke="#e9d5ff" stroke-width="1" fill="none" opacity=".5"/>
-        <path d="M112 110 Q126 116 140 110" stroke="#e9d5ff" stroke-width="1" fill="none" opacity=".5"/>
-        <!-- upper lashes -->
-        <path d="M70 90 Q76 83 84 87" stroke="#1e0a3c" stroke-width="2" stroke-linecap="round" fill="none"/>
-        <path d="M84 87 Q90 82 96 87" stroke="#1e0a3c" stroke-width="2" stroke-linecap="round" fill="none"/>
-        <path d="M96 87 Q102 83 106 89" stroke="#1e0a3c" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-        <path d="M112 89 Q116 83 126 87" stroke="#1e0a3c" stroke-width="2" stroke-linecap="round" fill="none"/>
-        <path d="M126 87 Q132 82 138 87" stroke="#1e0a3c" stroke-width="2" stroke-linecap="round" fill="none"/>
-        <path d="M138 87 Q144 83 148 90" stroke="#1e0a3c" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-        <!-- lower lashes -->
-        <path d="M70 110 Q72 115 70 118" stroke="#1e0a3c" stroke-width="1.2" stroke-linecap="round" fill="none"/>
-        <path d="M98 112 Q100 117 99 120" stroke="#1e0a3c" stroke-width="1.2" stroke-linecap="round" fill="none"/>
-        <path d="M112 112 Q111 117 112 120" stroke="#1e0a3c" stroke-width="1.2" stroke-linecap="round" fill="none"/>
-        <path d="M140 110 Q142 115 141 118" stroke="#1e0a3c" stroke-width="1.2" stroke-linecap="round" fill="none"/>
-      </g>
+        <button class="btn-submit" id="li-btn" type="submit">
+          <span class="btn-text">SIGN IN</span>
+          <div class="spinner"></div>
+        </button>
+      </form>
+    </div>
 
-      <!-- ── Eyes SHY (peeking, looking sideways) ── -->
-      <g class="eyes-shy">
-        <!-- whites -->
-        <ellipse cx="84" cy="103" rx="15" ry="14" fill="white"/>
-        <ellipse cx="126" cy="103" rx="15" ry="14" fill="white"/>
-        <!-- irises shifted right (looking away shyly) -->
-        <ellipse cx="88" cy="104" rx="10" ry="11" fill="url(#eyeL)"/>
-        <ellipse cx="130" cy="104" rx="10" ry="11" fill="url(#eyeR)"/>
-        <circle cx="89" cy="105" r="5.5" fill="#1e0a3c"/>
-        <circle cx="131" cy="105" r="5.5" fill="#1e0a3c"/>
-        <circle cx="91" cy="101" r="2.5" fill="white"/>
-        <circle cx="133" cy="101" r="2.5" fill="white"/>
-        <!-- heavy lashes same as above -->
-        <path d="M70 92 Q76 85 84 89" stroke="#1e0a3c" stroke-width="2" stroke-linecap="round" fill="none"/>
-        <path d="M84 89 Q90 84 96 89" stroke="#1e0a3c" stroke-width="2" stroke-linecap="round" fill="none"/>
-        <path d="M112 91 Q118 85 126 89" stroke="#1e0a3c" stroke-width="2" stroke-linecap="round" fill="none"/>
-        <path d="M126 89 Q132 84 138 89" stroke="#1e0a3c" stroke-width="2" stroke-linecap="round" fill="none"/>
-        <!-- sweat drops -->
-        <path d="M65 82 Q68 75 71 82 Q71 87 68 87 Q65 87 65 82Z" fill="#93c5fd" opacity=".8"/>
-      </g>
+    <!-- SIGNUP panel -->
+    <div class="signup-panel" id="signup-panel">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <span class="logo-text">Cloud MIN</span>
+      </div>
 
-      <!-- ── Eyes HAPPY (success) ── -->
-      <g class="eyes-happy">
-        <path d="M70 100 Q84 88 98 100" stroke="#1e0a3c" stroke-width="3" stroke-linecap="round" fill="none"/>
-        <path d="M112 100 Q126 88 140 100" stroke="#1e0a3c" stroke-width="3" stroke-linecap="round" fill="none"/>
-        <!-- sparkles -->
-        <text x="60" y="90" font-size="10" fill="#fbbf24">✦</text>
-        <text x="136" y="90" font-size="10" fill="#fbbf24">✦</text>
-      </g>
+      <div class="form-title">Create Account</div>
 
-      <!-- ── Blush ── -->
-      <ellipse class="blush" cx="64" cy="114" rx="14" ry="8" fill="#fb7185" opacity=".38"/>
-      <ellipse class="blush" cx="146" cy="114" rx="14" ry="8" fill="#fb7185" opacity=".38"/>
+      <div class="social-row">
+        <button class="soc-btn" title="Facebook">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+        </button>
+        <button class="soc-btn" title="Google">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        </button>
+        <button class="soc-btn" title="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+        </button>
+      </div>
 
-      <!-- ── Nose ── -->
-      <path d="M102 112 Q105 117 108 112" stroke="#f5a090" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      <div class="or-line">or use your email for registration:</div>
 
-      <!-- ── Mouth ── -->
-      <path d="M93 126 Q105 136 117 126" stroke="#e07070" stroke-width="2" stroke-linecap="round" fill="none"/>
-      <!-- teeth peek on happy -->
-      <path class="eyes-happy" d="M97 128 Q105 134 113 128 Q113 132 105 133 Q97 132 97 128Z" fill="white"/>
+      <% if (locals.error && locals.tab === 'signup') { %>
+      <div class="srv-msg err">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <circle cx="8" cy="8" r="6.5"/><path d="M8 5v3.5M8 11v.5"/>
+        </svg>
+        <%= error %>
+      </div>
+      <% } %>
+      <% if (locals.success) { %>
+      <div class="srv-msg ok">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <circle cx="8" cy="8" r="6.5"/><path d="M5 8l2 2 4-4"/>
+        </svg>
+        <%= success %>
+      </div>
+      <% } %>
 
-      <!-- ── Decorative sparkles ── -->
-      <text x="16" y="90" font-size="13" fill="#fbbf24" opacity=".8">✦</text>
-      <text x="178" y="165" font-size="10" fill="#c084fc" opacity=".7">✦</text>
-      <text x="10" y="190" font-size="8" fill="#f9a8d4" opacity=".6">★</text>
-      <text x="190" y="220" font-size="8" fill="#fbbf24" opacity=".5">★</text>
+      <form id="signup-form" action="/signup" method="POST" onsubmit="return doSubmit(event,'signup')">
+        <div class="field">
+          <div class="inp-wrap">
+            <span class="inp-ico">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <circle cx="8" cy="5.5" r="2.5"/><path d="M2.5 13.5c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/>
+              </svg>
+            </span>
+            <input class="field-input" id="su-user" name="username" type="text"
+                   placeholder="Name / Username" autocomplete="username">
+          </div>
+          <div class="field-msg" id="su-user-msg"></div>
+        </div>
 
-      <!-- ── Fan held in left hand ── -->
-      <g transform="translate(8 250) rotate(-30 15 15)">
-        <path d="M5 25 Q0 0 25 0 Q22 12 10 25Z" fill="#f9a8d4" opacity=".9"/>
-        <path d="M10 25 Q8 2 25 0 Q24 12 15 25Z" fill="#fda4af" opacity=".9"/>
-        <path d="M15 25 Q15 3 25 0 Q26 12 20 25Z" fill="#fb7185" opacity=".9"/>
-        <!-- fan pattern -->
-        <path d="M5 25 Q0 0 25 0" stroke="#e11d48" stroke-width=".8" fill="none" opacity=".5"/>
-        <path d="M10 25 Q8 2 25 0" stroke="#e11d48" stroke-width=".8" fill="none" opacity=".5"/>
-        <path d="M15 25 Q15 3 25 0" stroke="#e11d48" stroke-width=".8" fill="none" opacity=".5"/>
-        <!-- fan handle -->
-        <line x1="15" y1="25" x2="18" y2="34" stroke="#d97706" stroke-width="2.5" stroke-linecap="round"/>
-      </g>
+        <div class="field">
+          <div class="inp-wrap">
+            <span class="inp-ico">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <path d="M2 3h12a1 1 0 011 1v8a1 1 0 01-1 1H2a1 1 0 01-1-1V4a1 1 0 011-1z"/>
+                <polyline points="1 4 8 9 15 4"/>
+              </svg>
+            </span>
+            <input class="field-input" id="su-email" name="email" type="email"
+                   placeholder="Email (optional)" autocomplete="email">
+          </div>
+        </div>
 
-    </svg>
-    <div class="char-shadow"></div>
+        <div class="field">
+          <div class="inp-wrap">
+            <span class="inp-ico">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                <rect x="2" y="7" width="12" height="8" rx="1.5"/><path d="M5 7V5a3 3 0 016 0v2"/>
+              </svg>
+            </span>
+            <input class="field-input" id="su-pass" name="password" type="password"
+                   placeholder="Password (min 6 chars)" autocomplete="new-password">
+            <button type="button" class="eye-btn" onclick="toggleEye('su-pass','eye-su')">
+              <svg viewBox="0 0 16 16" fill="none" id="eye-su">
+                <path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.5"/>
+              </svg>
+            </button>
+          </div>
+          <div class="field-msg" id="su-pass-msg"></div>
+          <div class="s-bar-wrap" id="s-wrap">
+            <div class="s-bar-bg"><div class="s-bar-fill" id="s-fill"></div></div>
+          </div>
+        </div>
+
+        <button class="btn-submit" id="su-btn" type="submit" style="margin-top:10px">
+          <span class="btn-text">SIGN UP</span>
+          <div class="spinner"></div>
+        </button>
+      </form>
+    </div>
+
+  </div><!-- /panel-form -->
+
+  <!-- ══ WELCOME PANEL ══ -->
+  <div class="panel-welcome" id="panel-welcome">
+    <div class="welcome-diamond"></div>
+    <div class="welcome-diamond2"></div>
+    <div class="welcome-title" id="welcome-title">Hello, Friend!</div>
+    <div class="welcome-sub" id="welcome-sub">
+      Enter your personal details<br>and start your journey with us
+    </div>
+    <button class="welcome-btn" id="toggle-btn" onclick="switchMode()">SIGN UP</button>
   </div>
 
-  <!-- ══════════════════════════════════════
-       LOGIN CARD
-  ══════════════════════════════════════ -->
-  <div class="login-card">
-    <div class="login-title">ようこそ！ Welcome back</div>
-    <div class="login-sub">Cloud MIN Project · Secure Access</div>
-
-    <form id="login-form" action="/login" method="POST" onsubmit="return handleLogin(event)">
-
-      <!-- Username -->
-      <div class="field">
-        <label class="field-label" for="username-in">Username</label>
-        <div class="input-row">
-          <div class="input-ico">
-            <svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round">
-              <circle cx="8" cy="5.5" r="2.5"/>
-              <path d="M2.5 13.5c0-3 2.5-5 5.5-5s5.5 2 5.5 5"/>
-            </svg>
-          </div>
-          <input class="field-input" id="username-in" name="username"
-                 type="text" placeholder="Enter username" autocomplete="off">
-        </div>
-        <div class="field-msg" id="user-msg"></div>
-      </div>
-
-      <!-- Password -->
-      <div class="field">
-        <label class="field-label" for="pass-in">Password</label>
-        <div class="input-row">
-          <div class="input-ico">
-            <svg viewBox="0 0 16 16" fill="none" stroke-width="1.5" stroke-linecap="round">
-              <rect x="2" y="7" width="12" height="8" rx="1.5"/>
-              <path d="M5 7V5a3 3 0 016 0v2"/>
-            </svg>
-          </div>
-          <input class="field-input" id="pass-in" name="password"
-                 type="password" placeholder="Enter password">
-          <button type="button" class="eye-btn" onclick="togglePw()">
-            <svg viewBox="0 0 16 16" fill="none" id="eye-icon">
-              <path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-              <circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.5"/>
-            </svg>
-          </button>
-        </div>
-        <div class="field-msg" id="pass-msg"></div>
-        <div class="s-bar-wrap" id="s-bar-wrap">
-          <div class="s-bar-bg"><div class="s-bar-fill" id="s-bar"></div></div>
-        </div>
-      </div>
-
-      <!-- Remember / Forgot -->
-      <div class="check-row">
-        <input type="checkbox" id="remember">
-        <label class="check-label" for="remember">
-          <div class="custom-check">
-            <svg id="check-tick" width="10" height="10" viewBox="0 0 10 10" fill="none"
-                 stroke="white" stroke-width="1.8" stroke-linecap="round"
-                 style="opacity:0;transition:opacity .15s">
-              <polyline points="2,5 4.5,7.5 8,3"/>
-            </svg>
-          </div>
-          Remember me
-        </label>
-        <a href="#" class="forgot">Forgot password?</a>
-      </div>
-
-      <button class="btn-login" id="login-btn" type="submit">
-        <span class="btn-text">Sign in &nbsp;→</span>
-        <div class="btn-ripple"></div>
-        <div class="spinner"></div>
-      </button>
-
-    </form>
-  </div>
-</div>
+</div><!-- /card -->
 
 <script>
-/* ════════════════════════════════════════
-   BACKGROUND — Japanese night scene
-════════════════════════════════════════ */
-const cv  = document.getElementById('bg-canvas');
-const ctx = cv.getContext('2d');
-let W, H;
+const card     = document.getElementById('main-card');
+const wTitle   = document.getElementById('welcome-title');
+const wSub     = document.getElementById('welcome-sub');
+const toggleBtn= document.getElementById('toggle-btn');
 
-function resize(){ W = cv.width = innerWidth; H = cv.height = innerHeight; }
-resize(); window.addEventListener('resize', ()=>{ resize(); drawBg(); });
+let isSignup = false;
 
-/* stars */
-const stars = Array.from({length:200},()=>({
-  x:Math.random(), y:Math.random(),
-  r:Math.random()*1.4+.2,
-  a:Math.random()*.8+.2,
-  blink:Math.random()*Math.PI*2,
-  speed:Math.random()*.02+.005
-}));
-
-/* moon */
-function drawMoon(t){
-  const mx = W*.78, my = H*.18, mr = Math.min(W,H)*.075;
-  // moon glow
-  const grd = ctx.createRadialGradient(mx,my,0,mx,my,mr*3);
-  grd.addColorStop(0,'rgba(255,240,200,.14)');
-  grd.addColorStop(1,'transparent');
-  ctx.beginPath(); ctx.arc(mx,my,mr*3,0,Math.PI*2);
-  ctx.fillStyle=grd; ctx.fill();
-  // moon body
-  const mg = ctx.createRadialGradient(mx-mr*.25,my-mr*.25,0,mx,my,mr);
-  mg.addColorStop(0,'#fffbeb');
-  mg.addColorStop(.6,'#fef3c7');
-  mg.addColorStop(1,'#fde68a');
-  ctx.beginPath(); ctx.arc(mx,my,mr,0,Math.PI*2);
-  ctx.fillStyle=mg; ctx.fill();
-  // moon shadow (crescent shadow)
-  ctx.beginPath(); ctx.arc(mx+mr*.3,my-mr*.15,mr*.8,0,Math.PI*2);
-  ctx.fillStyle='rgba(13,10,26,.55)'; ctx.fill();
+// Read server-side tab
+const serverTab = '<%= locals.tab || "login" %>';
+if(serverTab === 'signup') {
+  isSignup = true;
+  applyMode(false); // apply without animation on load
 }
 
-/* torii gate */
-function drawTorii(){
-  const cx2=W*.12, cy2=H, tw=W*.14, th=H*.42;
-  const top=cy2-th, pilW=tw*.09;
-  ctx.save();
-  // pillars
-  ctx.fillStyle='#c2410c';
-  ctx.fillRect(cx2-tw*.4, top+th*.08, pilW, th);
-  ctx.fillRect(cx2+tw*.4-pilW, top+th*.08, pilW, th);
-  // top beam (kasagi) curved
-  ctx.beginPath();
-  ctx.moveTo(cx2-tw*.52, top+th*.04);
-  ctx.quadraticCurveTo(cx2, top-th*.04, cx2+tw*.52, top+th*.04);
-  ctx.lineWidth=tw*.12; ctx.strokeStyle='#c2410c'; ctx.stroke();
-  // second beam (nuki)
-  ctx.fillStyle='#b91c1c';
-  ctx.fillRect(cx2-tw*.42, top+th*.18, tw*.84, tw*.09);
-  // small top center post
-  ctx.fillStyle='#ef4444';
-  ctx.fillRect(cx2-pilW*.5, top-th*.07, pilW, th*.12);
-  ctx.restore();
-}
+function applyMode(animate){
+  if(animate){ card.classList.add('animating'); }
 
-/* mountains */
-function drawMountains(){
-  // far mountains
-  ctx.beginPath();
-  ctx.moveTo(0,H*.7);
-  ctx.lineTo(W*.15,H*.35);
-  ctx.lineTo(W*.3,H*.55);
-  ctx.lineTo(W*.45,H*.28);
-  ctx.lineTo(W*.6,H*.48);
-  ctx.lineTo(W*.75,H*.22);
-  ctx.lineTo(W*.9,H*.45);
-  ctx.lineTo(W,H*.38);
-  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
-  const mg=ctx.createLinearGradient(0,H*.2,0,H*.7);
-  mg.addColorStop(0,'#2d1b4e');
-  mg.addColorStop(1,'#1a0a2e');
-  ctx.fillStyle=mg; ctx.fill();
+  if(isSignup){
+    card.classList.add('signup-mode');
+    wTitle.textContent   = 'Welcome Back!';
+    wSub.innerHTML       = 'To keep connected with us<br>please login with your personal info';
+    toggleBtn.textContent= 'SIGN IN';
+    document.getElementById('login-panel').classList.remove('active');
+    document.getElementById('signup-panel').classList.add('active');
+  } else {
+    card.classList.remove('signup-mode');
+    wTitle.textContent   = 'Hello, Friend!';
+    wSub.innerHTML       = 'Enter your personal details<br>and start your journey with us';
+    toggleBtn.textContent= 'SIGN UP';
+    document.getElementById('signup-panel').classList.remove('active');
+    document.getElementById('login-panel').classList.add('active');
+  }
 
-  // near hills
-  ctx.beginPath();
-  ctx.moveTo(0,H*.85);
-  ctx.bezierCurveTo(W*.2,H*.65,W*.4,H*.78,W*.55,H*.7);
-  ctx.bezierCurveTo(W*.7,H*.62,W*.85,H*.75,W,H*.68);
-  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
-  const hg=ctx.createLinearGradient(0,H*.65,0,H);
-  hg.addColorStop(0,'#1e0a38');
-  hg.addColorStop(1,'#0d0520');
-  ctx.fillStyle=hg; ctx.fill();
-}
-
-/* sakura tree */
-function drawTree(){
-  const tx=W*.88, ty=H*.72;
-  // trunk
-  ctx.strokeStyle='#3b1a08'; ctx.lineWidth=8;
-  ctx.beginPath(); ctx.moveTo(tx,H); ctx.quadraticCurveTo(tx-10,ty+60,tx-5,ty); ctx.stroke();
-  // branches
-  ctx.lineWidth=4;
-  ctx.beginPath(); ctx.moveTo(tx-5,ty); ctx.quadraticCurveTo(tx-50,ty-40,tx-80,ty-20); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(tx-5,ty+20); ctx.quadraticCurveTo(tx+40,ty-20,tx+60,ty-50); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(tx-5,ty); ctx.quadraticCurveTo(tx-10,ty-60,tx+10,ty-90); ctx.stroke();
-  // blossom clusters
-  const blossomPos=[
-    [tx-80,ty-20],[tx-65,ty-45],[tx-55,ty-65],
-    [tx-30,ty-85],[tx+10,ty-90],[tx+30,ty-75],
-    [tx+60,ty-50],[tx+45,ty-25]
-  ];
-  blossomPos.forEach(([bx,by])=>{
-    for(let i=0;i<8;i++){
-      const angle=Math.random()*Math.PI*2;
-      const dist=Math.random()*22;
-      const px=bx+Math.cos(angle)*dist, py=by+Math.sin(angle)*dist;
-      ctx.beginPath(); ctx.arc(px,py,Math.random()*5+3,0,Math.PI*2);
-      const pink=Math.random()>.5?'rgba(255,182,193,.75)':'rgba(255,105,155,.55)';
-      ctx.fillStyle=pink; ctx.fill();
-    }
-  });
-}
-
-/* lanterns */
-function drawLanterns(t){
-  const lans=[{x:.22,y:.48},{x:.35,y:.52},{x:.58,y:.44}];
-  lans.forEach((l,i)=>{
-    const lx=W*l.x, ly=H*l.y;
-    const sway=Math.sin(t*.0008+i*1.5)*4;
-    ctx.save(); ctx.translate(sway,0);
-    // string
-    ctx.strokeStyle='rgba(255,220,150,.4)'; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.moveTo(lx,ly-30); ctx.lineTo(lx,ly); ctx.stroke();
-    // lantern body glow
-    const lg=ctx.createRadialGradient(lx,ly,0,lx,ly,25);
-    lg.addColorStop(0,'rgba(255,180,60,.25)');
-    lg.addColorStop(1,'transparent');
-    ctx.beginPath(); ctx.arc(lx,ly,25,0,Math.PI*2);
-    ctx.fillStyle=lg; ctx.fill();
-    // lantern body
-    ctx.beginPath();
-    ctx.ellipse(lx,ly,12,16,0,0,Math.PI*2);
-    ctx.fillStyle='rgba(220,80,20,.85)'; ctx.fill();
-    ctx.strokeStyle='rgba(255,150,60,.6)'; ctx.lineWidth=1; ctx.stroke();
-    // lantern bands
-    ctx.strokeStyle='rgba(200,60,10,.7)'; ctx.lineWidth=1.5;
-    ctx.beginPath(); ctx.moveTo(lx-12,ly); ctx.lineTo(lx+12,ly); ctx.stroke();
-    // top/bottom caps
-    ctx.fillStyle='rgba(150,40,10,.9)';
-    ctx.fillRect(lx-7,ly-17,14,4);
-    ctx.fillRect(lx-7,ly+13,14,4);
-    ctx.restore();
-  });
-}
-
-/* ground / water reflection */
-function drawGround(){
-  const gg=ctx.createLinearGradient(0,H*.82,0,H);
-  gg.addColorStop(0,'#0d0520');
-  gg.addColorStop(1,'#070310');
-  ctx.fillStyle=gg;
-  ctx.fillRect(0,H*.82,W,H*.18);
-
-  // water shimmer lines
-  for(let i=0;i<6;i++){
-    const wy=H*(.86+i*.022);
-    ctx.beginPath();
-    ctx.moveTo(W*.1,wy); ctx.lineTo(W*.9,wy);
-    ctx.strokeStyle=`rgba(200,150,255,${.04+i*.005})`;
-    ctx.lineWidth=.5; ctx.stroke();
+  if(animate){
+    setTimeout(()=> card.classList.remove('animating'), 700);
   }
 }
 
-/* sky gradient */
-function drawSky(){
-  const sg=ctx.createLinearGradient(0,0,0,H);
-  sg.addColorStop(0,'#03000d');
-  sg.addColorStop(.3,'#0d0520');
-  sg.addColorStop(.6,'#1a0a2e');
-  sg.addColorStop(1,'#0d0a1a');
-  ctx.fillStyle=sg;
-  ctx.fillRect(0,0,W,H);
+// Init
+applyMode(false);
+
+function switchMode(){
+  isSignup = !isSignup;
+  applyMode(true);
 }
-
-let animT=0;
-function drawBg(){
-  animT++;
-  ctx.clearRect(0,0,W,H);
-  drawSky();
-
-  // stars
-  stars.forEach(s=>{
-    const a=s.a*(0.5+0.5*Math.sin(animT*s.speed+s.blink));
-    ctx.beginPath(); ctx.arc(s.x*W,s.y*H*.6,s.r,0,Math.PI*2);
-    ctx.fillStyle=`rgba(230,210,255,${a})`; ctx.fill();
-  });
-
-  drawMoon(animT);
-  drawMountains();
-  drawTree();
-  drawTorii();
-  drawLanterns(animT);
-  drawGround();
-  requestAnimationFrame(drawBg);
-}
-drawBg();
-
-/* ── Falling sakura petals ── */
-(function spawnPetals(){
-  const colors=['#ffb7c5','#ff85a1','#fda4af','#f9a8d4','#fbcfe8'];
-  for(let i=0;i<18;i++){
-    const p=document.createElement('div');
-    p.className='petal';
-    const size=(Math.random()*8+6)+'px';
-    p.style.cssText=`
-      left:${Math.random()*100}%;
-      width:${size};height:${size};
-      background:${colors[Math.floor(Math.random()*colors.length)]};
-      animation-duration:${Math.random()*8+6}s;
-      animation-delay:${Math.random()*8}s;
-      border-radius:${Math.random()>.5?'50% 0 50% 0':'50%'};
-      opacity:.7;
-    `;
-    document.body.appendChild(p);
-  }
-})();
-
-/* ── Character reactions ── */
-const pIn = document.getElementById('pass-in');
-pIn.addEventListener('focus', ()=> document.body.classList.add('peeking'));
-pIn.addEventListener('blur',  ()=> document.body.classList.remove('peeking'));
-
-/* ── Validation ── */
-const uIn  = document.getElementById('username-in');
-const uMsg = document.getElementById('user-msg');
-const pMsg = document.getElementById('pass-msg');
-
-uIn.addEventListener('input', function(){
-  const v=this.value.trim();
-  if(!v){ uMsg.textContent=''; uMsg.className='field-msg'; this.className='field-input'; return; }
-  if(v.length<3){ uMsg.textContent='At least 3 characters'; uMsg.className='field-msg err'; this.className='field-input error'; }
-  else { uMsg.textContent='Looks good! ✓'; uMsg.className='field-msg ok'; this.className='field-input success'; }
-});
-
-pIn.addEventListener('input', function(){
-  const v=this.value;
-  const wrap=document.getElementById('s-bar-wrap'), bar=document.getElementById('s-bar');
-  if(!v){ pMsg.textContent=''; pMsg.className='field-msg'; this.className='field-input'; wrap.classList.remove('show'); return; }
-  wrap.classList.add('show');
-  const s=strength(v);
-  const labels=['Too short','Weak','Fair','Strong','Very strong'];
-  const colors=['#ef4444','#f97316','#eab308','#22c55e','#10b981'];
-  const widths=['20%','40%','60%','80%','100%'];
-  pMsg.textContent='Strength: '+labels[s]; pMsg.style.color=colors[s]; pMsg.className='field-msg';
-  bar.style.width=widths[s]; bar.style.background=colors[s];
-  this.className=s<2?'field-input error':'field-input success';
-});
-
-function strength(p){ let s=0; if(p.length>=6)s++; if(p.length>=10)s++; if(/[A-Z]/.test(p))s++; if(/[0-9]/.test(p))s++; return Math.min(s,4); }
 
 /* ── Eye toggle ── */
-function togglePw(){
-  const show=pIn.type==='text';
-  pIn.type=show?'password':'text';
-  document.getElementById('eye-icon').innerHTML=show
+function toggleEye(inputId, iconId){
+  const inp = document.getElementById(inputId);
+  const show= inp.type === 'text';
+  inp.type  = show ? 'password' : 'text';
+  document.getElementById(iconId).innerHTML = show
     ? '<path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.5"/>'
     : '<path d="M2 2l12 12M6.5 6.6A2 2 0 0010 10M9.88 9.88A2 2 0 016.1 6.1M1 8s3-5 7-5c1.25 0 2.43.37 3.44 1M15 8s-1.3 1.84-3.5 3.09" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>';
 }
 
-/* ── Checkbox ── */
-document.getElementById('remember').addEventListener('change', function(){
-  document.getElementById('check-tick').style.opacity=this.checked?'1':'0';
+/* ── Password strength ── */
+document.getElementById('su-pass').addEventListener('input', function(){
+  const v = this.value;
+  const wrap= document.getElementById('s-wrap');
+  const fill= document.getElementById('s-fill');
+  const msg = document.getElementById('su-pass-msg');
+  if(!v){ wrap.classList.remove('show'); msg.textContent=''; return; }
+  wrap.classList.add('show');
+  let s=0;
+  if(v.length>=6)s++;if(v.length>=10)s++;if(/[A-Z]/.test(v))s++;if(/[0-9]/.test(v))s++;
+  const labs=['Too short','Weak','Fair','Strong','Very strong'];
+  const cols=['#ef4444','#f97316','#eab308','#22c55e','#10b981'];
+  const ws  =['18%','36%','54%','76%','100%'];
+  fill.style.width=ws[s];fill.style.background=cols[s];
+  msg.textContent='Strength: '+labs[s];
+  msg.style.color=cols[s];msg.className='field-msg';
 });
 
-/* ── Toast ── */
-function showToast(msg,color){
-  const t=document.getElementById('toast');
-  document.getElementById('toast-msg').textContent=msg;
-  document.getElementById('toast-dot').style.background=color||'#22c55e';
-  t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000);
+/* ── Inline validation ── */
+function attachVal(inpId, msgId, minLen, label){
+  document.getElementById(inpId).addEventListener('blur', function(){
+    const v=this.value.trim(), m=document.getElementById(msgId);
+    if(!v){m.textContent='';m.className='field-msg';this.classList.remove('err','ok');return;}
+    if(v.length<minLen){
+      m.textContent=label+' must be at least '+minLen+' characters';
+      m.className='field-msg';this.classList.add('err');this.classList.remove('ok');
+    } else {
+      m.textContent='Looks good ✓';m.className='field-msg ok';
+      this.classList.remove('err');this.classList.add('ok');
+    }
+  });
 }
+attachVal('li-user','li-user-msg',3,'Username');
+attachVal('li-pass','li-pass-msg',6,'Password');
+attachVal('su-user','su-user-msg',3,'Username');
 
-/* ── Login ── */
-function handleLogin(e){
+/* ── Submit ── */
+function doSubmit(e, type){
   e.preventDefault();
-  const u=uIn.value.trim();
-  const btn=document.getElementById('login-btn');
+  const isLogin = type === 'login';
+  const userId  = isLogin ? 'li-user' : 'su-user';
+  const passId  = isLogin ? 'li-pass' : 'su-pass';
+  const uMsgId  = isLogin ? 'li-user-msg' : 'su-user-msg';
+  const pMsgId  = isLogin ? 'li-pass-msg' : 'su-pass-msg';
+  const btnId   = isLogin ? 'li-btn' : 'su-btn';
+  const formId  = isLogin ? 'login-form' : 'signup-form';
 
-  if(!u||u.length<3){
-    uIn.className='field-input error';
-    uMsg.textContent='Username required'; uMsg.className='field-msg err';
-    uIn.style.animation='none';
-    requestAnimationFrame(()=>{ uIn.style.animation='shake .4s ease'; });
-    return false;
+  const uIn = document.getElementById(userId);
+  const pIn = document.getElementById(passId);
+  const btn = document.getElementById(btnId);
+  let valid = true;
+
+  if(!uIn.value.trim() || uIn.value.trim().length < 3){
+    uIn.classList.add('err');uIn.classList.remove('ok');
+    document.getElementById(uMsgId).textContent='Username required (min 3 chars)';
+    document.getElementById(uMsgId).className='field-msg';
+    uIn.style.animation='none';requestAnimationFrame(()=>{uIn.style.animation='shake .35s ease';});
+    valid=false;
+  }
+  if(!pIn.value || pIn.value.length < 6){
+    pIn.classList.add('err');pIn.classList.remove('ok');
+    document.getElementById(pMsgId).textContent='Password required (min 6 chars)';
+    document.getElementById(pMsgId).className='field-msg';
+    if(valid){pIn.style.animation='none';requestAnimationFrame(()=>{pIn.style.animation='shake .35s ease';});}
+    valid=false;
   }
 
-  btn.classList.add('rippling');
-  setTimeout(()=>btn.classList.remove('rippling'),500);
-  btn.classList.add('loading');
+  if(!valid) return false;
 
-  setTimeout(()=>{
-    btn.classList.remove('loading');
-    document.body.classList.add('success-state');
-    showToast('ようこそ '+u+'! Redirecting…','#a78bfa');
-    uIn.className='field-input success';
-    pIn.className=pIn.value?'field-input success':'field-input';
-    setTimeout(()=>document.getElementById('login-form').submit(),1200);
-  },1800);
+  btn.classList.add('loading');
+  setTimeout(()=>{ document.getElementById(formId).submit(); }, 600);
   return false;
 }
 </script>
