@@ -1,359 +1,225 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Dashboard · <%= user %> · Cloud MIN</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 
 :root{
-  --teal:#39c5bb;
-  --teal-dark:#2ba8a0;
-  --teal-light:#e8faf9;
-  --teal-mid:rgba(57,197,187,.12);
+  --teal:#00c9b1;
+  --teal-2:#00a896;
+  --teal-3:#007d72;
+  --teal-glow:rgba(0,201,177,.18);
   --bg:#f0f4f8;
   --surface:#ffffff;
-  --border:#e8edf2;
-  --text:#2d3748;
-  --text-mid:#718096;
-  --text-light:#a0aec0;
-  --green:#27ae60;
-  --green-bg:rgba(39,174,96,.08);
-  --green-border:rgba(39,174,96,.2);
+  --surface2:#f7f9fc;
+  --surface3:#eef2f7;
+  --border:rgba(0,0,0,.07);
+  --border2:rgba(0,0,0,.12);
+  --text:#0f1923;
+  --text2:#4a5568;
+  --text3:#8a96a8;
+  --green:#10b981;
+  --green-bg:rgba(16,185,129,.1);
   --amber:#f59e0b;
-  --red:#e53e3e;
+  --red:#ef4444;
   --blue:#3b82f6;
-  --shadow-sm:0 1px 4px rgba(0,0,0,.06);
-  --shadow:0 4px 16px rgba(0,0,0,.08);
-  --shadow-lg:0 12px 40px rgba(0,0,0,.12);
-  --radius:16px;
-  --radius-sm:10px;
+  --blue-bg:rgba(59,130,246,.1);
+  --shadow:0 2px 12px rgba(0,0,0,.07);
+  --shadow2:0 8px 32px rgba(0,0,0,.1);
+  --r:14px;
+  --r2:10px;
+}
+[data-theme="dark"]{
+  --bg:#0c1117;
+  --surface:#161d27;
+  --surface2:#1a2333;
+  --surface3:#1f2a3a;
+  --border:rgba(255,255,255,.06);
+  --border2:rgba(255,255,255,.1);
+  --text:#e8edf5;
+  --text2:#8a9ab5;
+  --text3:#4a5a72;
+  --shadow:0 2px 12px rgba(0,0,0,.3);
+  --shadow2:0 8px 32px rgba(0,0,0,.4);
+  --teal-glow:rgba(0,201,177,.12);
 }
 
-html,body{
-  min-height:100%;
-  font-family:'Nunito',sans-serif;
-  background:var(--bg);
-  color:var(--text);
-}
+html,body{min-height:100%;font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);transition:background .3s,color .3s}
+.app{min-height:100vh;display:flex;flex-direction:column;position:relative}
 
-/* ── Background decoration ── */
-body::before{
-  content:'';position:fixed;top:-200px;right:-200px;
-  width:600px;height:600px;border-radius:50%;
-  background:radial-gradient(circle,rgba(57,197,187,.08) 0%,transparent 70%);
-  pointer-events:none;z-index:0;
-}
-body::after{
-  content:'';position:fixed;bottom:-150px;left:-150px;
-  width:400px;height:400px;border-radius:50%;
-  background:radial-gradient(circle,rgba(57,197,187,.06) 0%,transparent 70%);
-  pointer-events:none;z-index:0;
-}
-
-.app{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
+/* ── Ambient BG ── */
+.ambient{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.ambient::before{content:'';position:absolute;top:-20%;right:-10%;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,var(--teal-glow) 0%,transparent 65%)}
+.ambient::after{content:'';position:absolute;bottom:-20%;left:-10%;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(59,130,246,.06) 0%,transparent 65%)}
 
 /* ── Toast ── */
-.toast{
-  position:fixed;top:20px;left:50%;
-  transform:translateX(-50%) translateY(-70px);
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:50px;padding:10px 20px;
-  color:var(--text);font-size:13px;font-weight:600;
-  white-space:nowrap;display:flex;align-items:center;gap:8px;
-  transition:transform .4s cubic-bezier(.22,1,.36,1),opacity .4s;
-  opacity:0;z-index:200;
-  box-shadow:var(--shadow-lg);
-}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--surface);border:1px solid var(--border2);border-radius:50px;padding:10px 18px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;z-index:999;transition:transform .4s cubic-bezier(.22,1,.36,1),opacity .4s;opacity:0;box-shadow:var(--shadow2);white-space:nowrap}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-.toast-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.toast-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 
 /* ── Header ── */
-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 32px;height:64px;
-  background:var(--surface);
-  border-bottom:1px solid var(--border);
-  position:sticky;top:0;z-index:50;
-  box-shadow:var(--shadow-sm);
-  animation:slideDown .5s cubic-bezier(.22,1,.36,1) both;
-}
+header{display:flex;align-items:center;justify-content:space-between;padding:0 28px;height:60px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;box-shadow:var(--shadow);backdrop-filter:blur(12px);animation:slideDown .5s cubic-bezier(.22,1,.36,1)}
 @keyframes slideDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
 
-.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
-.brand-mark{
-  width:36px;height:36px;border-radius:10px;
-  background:linear-gradient(135deg,var(--teal),var(--teal-dark));
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 4px 12px rgba(57,197,187,.35);
-  flex-shrink:0;
-}
-.brand-mark svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.brand-name{font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.brand{display:flex;align-items:center;gap:9px;text-decoration:none}
+.brand-mark{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--teal),var(--teal-2));display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px var(--teal-glow)}
+.brand-mark svg{width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.brand-name{font-size:16px;font-weight:700;letter-spacing:-.4px}
 .brand-name span{color:var(--teal)}
 
-.nav-center{display:flex;align-items:center;gap:4px}
-.nav-link{
-  padding:6px 14px;border-radius:8px;
-  font-size:13px;font-weight:600;color:var(--text-mid);
-  cursor:pointer;transition:background .15s,color .15s;
-  border:none;background:transparent;font-family:'Nunito',sans-serif;
-}
-.nav-link:hover{background:var(--teal-light);color:var(--teal-dark)}
-.nav-link.active{background:var(--teal-light);color:var(--teal)}
+/* .nav-pills{display:flex;gap:2px;background:var(--surface3);border-radius:8px;padding:3px}
+.nav-pill{padding:5px 14px;border-radius:6px;font-size:12.5px;font-weight:600;color:var(--text2);background:transparent;border:none;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .15s}
+.nav-pill.active,.nav-pill:hover{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+.nav-pill.active{color:var(--teal)} */
 
-.nav-right{display:flex;align-items:center;gap:10px}
-.pill{
-  display:flex;align-items:center;gap:6px;
-  background:var(--green-bg);border:1px solid var(--green-border);
-  border-radius:50px;padding:5px 12px;
-  font-size:12px;color:var(--green);font-weight:700;
-}
-.dot-pulse{
-  width:7px;height:7px;background:var(--green);border-radius:50%;
-  animation:dpulse 2s ease-in-out infinite;
-}
-@keyframes dpulse{0%,100%{box-shadow:0 0 0 0 rgba(39,174,96,.5)}50%{box-shadow:0 0 0 5px rgba(39,174,96,0)}}
+.header-right{display:flex;align-items:center;gap:8px}
+.status-pill{display:flex;align-items:center;gap:5px;background:var(--green-bg);border-radius:50px;padding:5px 11px;font-size:11.5px;font-weight:700;color:var(--green)}
+.pulse-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}50%{box-shadow:0 0 0 4px rgba(16,185,129,0)}}
 
-.clock-badge{
-  font-family:'JetBrains Mono',monospace;font-size:12px;
-  color:var(--text-mid);background:var(--bg);
-  border:1px solid var(--border);border-radius:8px;padding:5px 11px;
-}
-.avatar{
-  width:36px;height:36px;border-radius:50%;
-  background:linear-gradient(135deg,var(--teal),var(--teal-dark));
-  display:flex;align-items:center;justify-content:center;
-  font-weight:800;font-size:14px;color:#fff;
-  border:2px solid rgba(57,197,187,.25);
-  cursor:default;transition:transform .2s,box-shadow .2s;
-  flex-shrink:0;
-}
-.avatar:hover{transform:scale(1.08);box-shadow:0 4px 16px rgba(57,197,187,.4)}
+.clock{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text2);background:var(--surface3);border-radius:7px;padding:5px 10px;border:1px solid var(--border)}
 
-/* logout btn */
-.logout-btn{
-  display:flex;align-items:center;gap:6px;
-  padding:6px 14px;border-radius:8px;
-  font-size:12.5px;font-weight:700;color:var(--text-mid);
-  background:transparent;border:1px solid var(--border);
-  cursor:pointer;font-family:'Nunito',sans-serif;
-  transition:background .15s,color .15s,border-color .15s;
-  text-decoration:none;
-}
-.logout-btn:hover{background:#fff5f5;color:var(--red);border-color:rgba(229,62,62,.2)}
-.logout-btn svg{width:13px;height:13px}
+.theme-btn{width:34px;height:34px;border-radius:8px;background:var(--surface3);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;color:var(--text2);font-size:16px;line-height:1}
+.theme-btn:hover{background:var(--surface2);border-color:var(--teal)}
+
+.avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--teal-3));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;cursor:default;transition:transform .2s;border:2px solid rgba(0,201,177,.2)}
+.avatar:hover{transform:scale(1.08)}
+
+.btn-logout{display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:7px;font-size:12.5px;font-weight:600;color:var(--text2);background:transparent;border:1px solid var(--border);cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .15s;text-decoration:none}
+.btn-logout:hover{background:rgba(239,68,68,.07);color:var(--red);border-color:rgba(239,68,68,.2)}
+.btn-logout svg{width:13px;height:13px}
 
 /* ── Main ── */
-main{flex:1;padding:28px 32px;max-width:1100px;margin:0 auto;width:100%}
+main{flex:1;padding:24px 28px;max-width:1120px;margin:0 auto;width:100%;position:relative;z-index:1}
 
 /* ── Hero ── */
-.hero{
-  display:flex;align-items:flex-start;justify-content:space-between;
-  margin-bottom:24px;
-  animation:fadeUp .5s .08s both;
-}
-@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-.hero-left{}
-.hero-tag{
-  display:inline-flex;align-items:center;gap:6px;
-  font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
-  color:var(--teal);background:var(--teal-light);
-  border:1px solid rgba(57,197,187,.2);
-  border-radius:50px;padding:3px 12px;margin-bottom:10px;
-}
-.hero-tag-dot{width:5px;height:5px;background:var(--teal);border-radius:50%}
-.hero-title{font-size:28px;font-weight:800;color:var(--text);letter-spacing:-.5px;margin-bottom:4px}
+.hero{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;animation:fadeUp .5s .1s both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.hero-badge{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--teal);background:var(--teal-glow);border:1px solid rgba(0,201,177,.2);border-radius:50px;padding:3px 11px;margin-bottom:8px}
+.hero-badge-dot{width:5px;height:5px;background:var(--teal);border-radius:50%}
+.hero-title{font-size:26px;font-weight:700;letter-spacing:-.5px}
 .hero-title em{font-style:normal;color:var(--teal)}
-.hero-sub{font-size:13.5px;color:var(--text-mid)}
+.hero-sub{font-size:13px;color:var(--text2);margin-top:3px}
 
-.hero-actions{display:flex;align-items:center;gap:10px}
-.btn-refresh{
-  display:flex;align-items:center;gap:7px;
-  padding:9px 18px;border-radius:50px;
-  background:var(--teal);color:#fff;
-  border:none;cursor:pointer;font-family:'Nunito',sans-serif;
-  font-size:13px;font-weight:700;
-  box-shadow:0 4px 16px rgba(57,197,187,.35);
-  transition:transform .15s,box-shadow .2s;
-}
-.btn-refresh:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(57,197,187,.45)}
-.btn-refresh svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round}
+.hero-actions{display:flex;align-items:center;gap:8px}
+.btn-refresh{display:flex;align-items:center;gap:6px;padding:9px 18px;border-radius:50px;background:var(--teal);color:#fff;border:none;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;box-shadow:0 4px 18px var(--teal-glow);transition:all .2s}
+.btn-refresh:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,201,177,.35)}
+.btn-refresh svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:2.4;stroke-linecap:round}
 .spin{animation:spin .6s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ── Stat cards row ── */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
-.sc{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius);padding:18px 20px;
-  position:relative;overflow:hidden;
-  box-shadow:var(--shadow-sm);
-  transition:transform .2s,box-shadow .2s;
-  animation:fadeUp .5s both;
-}
-.sc:nth-child(1){animation-delay:.12s}
-.sc:nth-child(2){animation-delay:.18s}
-.sc:nth-child(3){animation-delay:.24s}
-.sc:nth-child(4){animation-delay:.30s}
-.sc:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
-.sc::after{
-  content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:0 0 2px 2px;
-}
-.sc.c-teal::after{background:linear-gradient(90deg,var(--teal),var(--teal-dark))}
-.sc.c-green::after{background:linear-gradient(90deg,#27ae60,#2ecc71)}
-.sc.c-amber::after{background:linear-gradient(90deg,#f59e0b,#fcd34d)}
-.sc.c-blue::after{background:linear-gradient(90deg,#3b82f6,#60a5fa)}
-.sc-icon{
-  width:38px;height:38px;border-radius:10px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:18px;margin-bottom:12px;
-}
-.sc.c-teal .sc-icon{background:rgba(57,197,187,.12)}
-.sc.c-green .sc-icon{background:rgba(39,174,96,.1)}
+/* ── Alert Banner ── */
+.alert{display:flex;align-items:center;gap:10px;background:var(--blue-bg);border:1px solid rgba(59,130,246,.2);border-radius:var(--r2);padding:12px 16px;margin-bottom:16px;font-size:13px;font-weight:500;color:var(--blue);animation:fadeUp .5s .12s both;cursor:pointer;transition:opacity .2s}
+.alert:hover{opacity:.8}
+.alert svg{width:14px;height:14px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2}
+.alert-close{margin-left:auto;opacity:.6;font-size:18px;line-height:1;cursor:pointer}
+
+/* ── Stat Cards ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;position:relative;overflow:hidden;box-shadow:var(--shadow);transition:transform .2s,box-shadow .2s,border-color .2s;animation:fadeUp .5s both}
+.sc:nth-child(1){animation-delay:.14s}.sc:nth-child(2){animation-delay:.18s}.sc:nth-child(3){animation-delay:.22s}.sc:nth-child(4){animation-delay:.26s}
+.sc:hover{transform:translateY(-3px);box-shadow:var(--shadow2);border-color:var(--border2)}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.sc.c-teal::before{background:linear-gradient(90deg,var(--teal),var(--teal-2))}
+.sc.c-amber::before{background:linear-gradient(90deg,var(--amber),#fcd34d)}
+.sc.c-blue::before{background:linear-gradient(90deg,var(--blue),#60a5fa)}
+.sc.c-green::before{background:linear-gradient(90deg,var(--green),#34d399)}
+.sc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.sc-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.sc.c-teal .sc-icon{background:rgba(0,201,177,.1)}
 .sc.c-amber .sc-icon{background:rgba(245,158,11,.1)}
 .sc.c-blue .sc-icon{background:rgba(59,130,246,.1)}
-.sc-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--text-light);font-weight:700;margin-bottom:4px}
-.sc-val{font-size:20px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
-.sc-badge{
-  font-size:10px;padding:2px 8px;border-radius:50px;font-weight:700;
-}
-.sc-badge.teal{background:rgba(57,197,187,.12);color:var(--teal);border:1px solid rgba(57,197,187,.2)}
-.sc-badge.green{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
-.sc-badge.amber{background:rgba(245,158,11,.1);color:#d97706;border:1px solid rgba(245,158,11,.2)}
-.sc-badge.blue{background:rgba(59,130,246,.1);color:#2563eb;border:1px solid rgba(59,130,246,.2)}
+.sc.c-green .sc-icon{background:rgba(16,185,129,.1)}
+.sc-trend{font-size:11px;font-weight:700;padding:2px 7px;border-radius:50px}
+.trend-up{background:var(--green-bg);color:var(--green)}
+.trend-ok{background:var(--blue-bg);color:var(--blue)}
+.sc-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);font-weight:700;margin-bottom:4px}
+.sc-val{font-size:19px;font-weight:700;letter-spacing:-.3px;font-family:'JetBrains Mono',monospace;color:var(--text)}
+.sc-sub{font-size:11px;color:var(--text3);margin-top:3px}
 
-/* ── Grid ── */
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
-.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+/* ── Load Mini Bars ── */
+.load-bars{display:flex;align-items:flex-end;gap:3px;height:32px;margin-top:8px}
+.lb{flex:1;border-radius:3px 3px 0 0;background:var(--teal);opacity:.65;transition:height .4s ease}
 
-/* ── Info card ── */
-.ic{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--radius);padding:22px;
-  box-shadow:var(--shadow-sm);
-  transition:transform .2s,box-shadow .2s;
-  animation:fadeUp .5s both;
-}
-.ic:nth-child(1){animation-delay:.36s}
-.ic:nth-child(2){animation-delay:.42s}
-.ic:nth-child(3){animation-delay:.48s}
-.ic:nth-child(4){animation-delay:.54s}
-.ic:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+/* ── Grid Layouts ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
 
-.ic-head{
-  display:flex;align-items:center;gap:8px;
-  margin-bottom:16px;
-  font-size:13px;font-weight:800;color:var(--text);
-}
-.ic-accent{
-  width:4px;height:18px;border-radius:4px;flex-shrink:0;
-}
-.ic-accent.teal{background:var(--teal)}
-.ic-accent.green{background:var(--green)}
-.ic-accent.amber{background:var(--amber)}
-.ic-accent.blue{background:var(--blue)}
-.ic-head-right{margin-left:auto}
+/* ── Cards ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);transition:transform .2s,box-shadow .2s,border-color .2s;animation:fadeUp .5s both}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow2);border-color:var(--border2)}
+.card:nth-child(1){animation-delay:.30s}.card:nth-child(2){animation-delay:.35s}.card:nth-child(3){animation-delay:.40s}
 
-.live-chip{
-  display:inline-flex;align-items:center;gap:5px;
-  font-size:10px;font-weight:700;letter-spacing:.05em;
-  color:var(--green);background:var(--green-bg);
-  border:1px solid var(--green-border);border-radius:50px;padding:3px 9px;
-}
-.live-dot{width:5px;height:5px;background:var(--green);border-radius:50%;animation:dpulse 1.5s infinite}
+.card-head{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.card-accent{width:3px;height:16px;border-radius:3px;flex-shrink:0}
+.ca-teal{background:var(--teal)}.ca-green{background:var(--green)}.ca-amber{background:var(--amber)}.ca-blue{background:var(--blue)}
+.card-title{font-size:13px;font-weight:700;flex:1}
+.live-chip{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;letter-spacing:.05em;color:var(--green);background:var(--green-bg);border:1px solid rgba(16,185,129,.2);border-radius:50px;padding:2px 8px}
+.live-dot{width:5px;height:5px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite}
 
-/* row */
-.row{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:9px 0;border-bottom:1px solid var(--border);
-  font-size:13px;
-}
+/* ── Table Rows ── */
+.row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
 .row:last-child{border-bottom:none}
-.rl{color:var(--text-mid);font-weight:500}
-.rv{font-weight:700;color:var(--text)}
-.rv.teal{color:var(--teal)}
-.rv.green{color:var(--green)}
-.rv.amber{color:var(--amber)}
-.rv.blue{color:var(--blue)}
+.rl{color:var(--text2);font-weight:500}
+.rv{font-weight:600}
+.rv.teal{color:var(--teal)}.rv.green{color:var(--green)}.rv.amber{color:var(--amber)}.rv.blue{color:var(--blue)}
+.row.hidden{display:none}
 
-/* progress bars */
+/* ── Progress Bars ── */
 .pb{margin-bottom:14px}
 .pb:last-child{margin-bottom:0}
-.pb-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.pb-label{font-size:12px;font-weight:700;color:var(--text-mid)}
-.pb-pct{
-  font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:500;
-  color:var(--text-mid);
-}
-.pb-track{height:6px;background:#edf2f7;border-radius:10px;overflow:hidden}
-.pb-fill{
-  height:100%;border-radius:10px;width:0;
-  transition:width .9s cubic-bezier(.22,1,.36,1);
-}
-.pb-fill.f-teal{background:linear-gradient(90deg,var(--teal),#6ee7e1)}
-.pb-fill.f-green{background:linear-gradient(90deg,#27ae60,#6ee7b7)}
-.pb-fill.f-red{background:linear-gradient(90deg,#e53e3e,#fc8181)}
-.pb-fill.f-amber{background:linear-gradient(90deg,#f59e0b,#fcd34d)}
-.warn-pct{color:#d97706 !important}
-.crit-pct{color:#e53e3e !important}
+.pb-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.pb-label{font-size:12px;font-weight:600;color:var(--text2)}
+.pb-pct{font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:500;color:var(--text2)}
+.pb-track{height:5px;background:var(--surface3);border-radius:10px;overflow:hidden}
+.pb-fill{height:100%;border-radius:10px;width:0;transition:width 1.2s cubic-bezier(.22,1,.36,1)}
+.f-teal{background:linear-gradient(90deg,var(--teal),#6ee7e1)}
+.f-green{background:linear-gradient(90deg,var(--green),#6ee7b7)}
+.f-red{background:linear-gradient(90deg,var(--red),#fc8181)}
+.f-amber{background:linear-gradient(90deg,var(--amber),#fcd34d)}
+.pb.hidden{display:none}
+.warn-pct{color:#d97706!important}.crit-pct{color:var(--red)!important}
 
-/* activity feed */
-.act{
-  display:flex;align-items:center;gap:12px;
-  padding:9px 0;border-bottom:1px solid var(--border);
-}
-.act:last-child{border-bottom:none}
-.act-ico{
-  width:30px;height:30px;border-radius:8px;
-  display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;font-size:14px;
-}
-.act-ico.g{background:var(--green-bg)}
-.act-ico.t{background:var(--teal-light)}
-.act-ico.a{background:rgba(245,158,11,.1)}
-.act-body{flex:1}
-.act-text{font-size:13px;font-weight:600;color:var(--text)}
-.act-sub{font-size:11px;color:var(--text-light);margin-top:1px}
-.act-time{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-light)}
+/* ── Sparklines ── */
+.spark-wrap{position:relative;width:100%;height:40px;margin-top:6px}
+.spark-wrap canvas{width:100%;height:100%}
 
-/* region tag */
-.region-tag{
-  display:inline-flex;align-items:center;gap:5px;
-  font-size:11px;font-weight:700;
-  background:var(--teal-light);color:var(--teal-dark);
-  border:1px solid rgba(57,197,187,.2);
-  border-radius:50px;padding:3px 10px;
-}
+/* ── Region Tag ── */
+.region-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;background:var(--teal-glow);color:var(--teal-2);border:1px solid rgba(0,201,177,.2);border-radius:50px;padding:2px 9px}
+
+/* ── Activity Feed ── */
+.act-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.act-item:last-child{border-bottom:none}
+.act-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.act-msg{font-size:12.5px;font-weight:600;color:var(--text)}
+.act-time{font-size:11px;color:var(--text3);margin-top:1px}
 
 /* ── Footer ── */
-footer{
-  text-align:center;padding:16px;
-  border-top:1px solid var(--border);
-  background:var(--surface);
-  font-size:12px;color:var(--text-light);
-  animation:fadeUp .5s .7s both;
-}
-footer b{color:var(--teal);font-weight:700}
+footer{text-align:center;padding:14px;border-top:1px solid var(--border);background:var(--surface);font-size:11.5px;color:var(--text3);position:relative;z-index:1}
+footer b{color:var(--teal);font-weight:600}
 
 /* ── Responsive ── */
-@media(max-width:900px){
-  .stats{grid-template-columns:repeat(2,1fr)}
+@media(max-width:960px){
+  .stats{grid-template-columns:1fr 1fr}
   .grid2,.grid3{grid-template-columns:1fr}
-  .nav-center{display:none}
+  .nav-pills{display:none}
   header{padding:0 16px}
-  main{padding:20px 16px}
+  main{padding:18px 16px}
 }
 @media(max-width:560px){
   .stats{grid-template-columns:1fr 1fr}
-  .hero{flex-direction:column;gap:12px}
+  .hero{flex-direction:column;align-items:flex-start;gap:12px}
   .hero-title{font-size:22px}
 }
 </style>
 </head>
 <body>
+
+<div class="ambient"></div>
 
 <div class="toast" id="toast">
   <div class="toast-dot" id="toast-dot"></div>
@@ -364,25 +230,25 @@ footer b{color:var(--teal);font-weight:700}
 
   <!-- ── Header ── -->
   <header>
-    <div class="brand">
+    <a class="brand" href="#">
       <div class="brand-mark">
         <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
       </div>
       <span class="brand-name">Cloud <span>MIN</span></span>
-    </div>
+    </a>
 
-    <div class="nav-center">
-      <button class="nav-link active">Overview</button>
-      <button class="nav-link">Servers</button>
-      <button class="nav-link">Metrics</button>
-      <button class="nav-link">Logs</button>
-    </div>
+    <!-- <div class="nav-pills">
+      <button class="nav-pill active" onclick="setTab(this,'overview')">Overview</button>
+      <button class="nav-pill" onclick="setTab(this,'detail')">Detail</button>
+      <button class="nav-pill" onclick="setTab(this,'logs')">Activity</button>
+    </div> -->
 
-    <div class="nav-right">
-      <div class="pill"><div class="dot-pulse"></div>Operational</div>
-      <div class="clock-badge" id="hclock">--:--:--</div>
+    <div class="header-right">
+      <div class="status-pill"><div class="pulse-dot"></div>Operational</div>
+      <div class="clock" id="hclock">--:--:--</div>
+      <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle dark/light mode">🌙</button>
       <div class="avatar"><%= user.charAt(0).toUpperCase() %></div>
-      <a href="/logout" class="logout-btn">
+      <a href="/logout" class="btn-logout">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
           <path d="M6 2H3a1 1 0 00-1 1v10a1 1 0 001 1h3M10 11l3-3-3-3M13 8H6"/>
         </svg>
@@ -395,10 +261,10 @@ footer b{color:var(--teal);font-weight:700}
 
     <!-- ── Hero ── -->
     <div class="hero">
-      <div class="hero-left">
-        <div class="hero-tag"><div class="hero-tag-dot"></div>Dashboard Overview</div>
+      <div>
+        <div class="hero-badge"><div class="hero-badge-dot"></div>Dashboard Overview</div>
         <h1 class="hero-title">Hello, <em><%= user %></em> 👋</h1>
-        <p class="hero-sub">Live system stats — refreshing every 3 seconds</p>
+        <p class="hero-sub">All systems operational &nbsp;·&nbsp; Last updated <span id="last-update">just now</span></p>
       </div>
       <div class="hero-actions">
         <button class="btn-refresh" onclick="triggerRefresh()">
@@ -408,79 +274,105 @@ footer b{color:var(--teal);font-weight:700}
       </div>
     </div>
 
-    <!-- ── 4 stat cards ── -->
+    <!-- ── Alert Banner ── -->
+    <div class="alert" id="alert-banner" onclick="this.style.display='none'">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><line x1="8" y1="5" x2="8" y2="8.5"/><circle cx="8" cy="11" r=".6" fill="currentColor"/></svg>
+      <span id="alert-text">Fetching system status...</span>
+      <span class="alert-close">&times;</span>
+    </div>
+
+    <!-- ── 4 Stat Cards ── -->
     <div class="stats">
       <div class="sc c-teal">
-        <div class="sc-icon">🖥️</div>
+        <div class="sc-top">
+          <div class="sc-icon">🖥️</div>
+          <span class="sc-trend trend-ok">Active</span>
+        </div>
         <div class="sc-label">Active Server</div>
-        <div class="sc-val" style="font-size:15px"><span id="s-hostname"><%= server %></span></div>
+        <div class="sc-val" id="s-hostname" style="font-size:13px;letter-spacing:0">–</div>
+        <div class="sc-sub" id="s-platform">–</div>
       </div>
-      <div class="sc c-green">
-        <div class="sc-icon">✅</div>
-        <div class="sc-label">App Status</div>
-        <div class="sc-val">Running <span class="sc-badge green">Healthy</span></div>
-      </div>
+
       <div class="sc c-amber">
-        <div class="sc-icon">📊</div>
+        <div class="sc-top">
+          <div class="sc-icon">📊</div>
+          <span class="sc-trend trend-ok">1m avg</span>
+        </div>
         <div class="sc-label">Load Average</div>
-        <div class="sc-val"><span id="s-load">–</span> <span class="sc-badge amber">1m avg</span></div>
+        <div class="sc-val" id="s-load">–</div>
+        <div class="sc-sub" id="s-load-sub">– cores</div>
+        <div class="load-bars" id="load-bars">
+          <div class="lb" style="height:60%"></div>
+          <div class="lb" style="height:45%"></div>
+          <div class="lb" style="height:70%"></div>
+          <div class="lb" style="height:40%"></div>
+          <div class="lb" style="height:55%"></div>
+          <div class="lb" style="height:65%"></div>
+          <div class="lb" style="height:50%"></div>
+          <div class="lb" style="height:48%"></div>
+        </div>
       </div>
+
       <div class="sc c-blue">
-        <div class="sc-icon">⏱️</div>
+        <div class="sc-top">
+          <div class="sc-icon">⏱️</div>
+          <span class="sc-trend trend-up">Running</span>
+        </div>
         <div class="sc-label">App Uptime</div>
-        <div class="sc-val" style="font-size:14px;font-family:'JetBrains Mono',monospace"><span id="s-appuptime">–</span></div>
+        <div class="sc-val" id="s-appuptime">–</div>
+        <div class="sc-sub" id="s-appuptime-sub">–</div>
+      </div>
+
+      <div class="sc c-green">
+        <div class="sc-top">
+          <div class="sc-icon">🕒</div>
+          <span class="sc-trend trend-up">Online</span>
+        </div>
+        <div class="sc-label">OS Uptime</div>
+        <div class="sc-val" id="s-osuptime">–</div>
+        <div class="sc-sub">Since last reboot</div>
       </div>
     </div>
 
     <!-- ── Row 1: Server Info + Resource Usage ── -->
     <div class="grid2">
 
-      <div class="ic">
-        <div class="ic-head">
-          <div class="ic-accent teal"></div>
-          Server Information
-          <div class="ic-head-right"><span class="live-chip"><span class="live-dot"></span>LIVE</span></div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-accent ca-teal"></div>
+          <span class="card-title">Server Information</span>
+          <span class="live-chip"><span class="live-dot"></span>LIVE</span>
         </div>
-        <div class="row"><span class="rl">Hostname</span><span class="rv teal" id="d-hostname">–</span></div>
-        <div class="row"><span class="rl">Platform / Arch</span><span class="rv" id="d-platform">–</span></div>
-        <div class="row"><span class="rl">CPU Cores</span><span class="rv" id="d-cores">–</span></div>
-        <div class="row"><span class="rl">Total Memory</span><span class="rv" id="d-totalmem">–</span></div>
-        <div class="row"><span class="rl">Free Memory</span><span class="rv green" id="d-freemem">–</span></div>
-        <div class="row"><span class="rl">OS Uptime</span><span class="rv amber" id="d-osuptime">–</span></div>
+        <div class="row" id="row-hostname"><span class="rl">Hostname</span><span class="rv teal" id="d-hostname">–</span></div>
+        <div class="row" id="row-platform"><span class="rl">Platform / Arch</span><span class="rv" id="d-platform">–</span></div>
+        <div class="row" id="row-cores"><span class="rl">CPU Cores</span><span class="rv" id="d-cores">–</span></div>
+        <div class="row" id="row-totalmem"><span class="rl">Total Memory</span><span class="rv" id="d-totalmem">–</span></div>
+        <div class="row" id="row-freemem"><span class="rl">Free Memory</span><span class="rv green" id="d-freemem">–</span></div>
+        <div class="row" id="row-osuptime2"><span class="rl">OS Uptime</span><span class="rv amber" id="d-osuptime">–</span></div>
       </div>
 
-      <div class="ic">
-        <div class="ic-head">
-          <div class="ic-accent green"></div>
-          Resource Usage
-          <div class="ic-head-right"><span class="live-chip"><span class="live-dot"></span>LIVE</span></div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-accent ca-green"></div>
+          <span class="card-title">Resource Usage</span>
+          <span class="live-chip"><span class="live-dot"></span>LIVE</span>
         </div>
-        <div class="pb">
-          <div class="pb-row">
-            <span class="pb-label">CPU Usage</span>
-            <span class="pb-pct" id="cpu-pct">–%</span>
-          </div>
+        <div class="pb" id="pb-cpu">
+          <div class="pb-head"><span class="pb-label">CPU Usage</span><span class="pb-pct" id="cpu-pct">–</span></div>
           <div class="pb-track"><div class="pb-fill f-teal" id="cpu-bar"></div></div>
+          <div class="spark-wrap"><canvas id="cpu-spark" role="img" aria-label="CPU usage history sparkline"></canvas></div>
         </div>
-        <div class="pb">
-          <div class="pb-row">
-            <span class="pb-label">Memory</span>
-            <span class="pb-pct" id="mem-pct">–%</span>
-          </div>
+        <div class="pb" id="pb-mem">
+          <div class="pb-head"><span class="pb-label">Memory</span><span class="pb-pct" id="mem-pct">–</span></div>
           <div class="pb-track"><div class="pb-fill f-green" id="mem-bar"></div></div>
+          <div class="spark-wrap"><canvas id="mem-spark" role="img" aria-label="Memory usage history sparkline"></canvas></div>
         </div>
-        <div class="pb">
-          <div class="pb-row">
-            <span class="pb-label">Disk</span>
-            <span class="pb-pct" id="disk-pct">–%</span>
-          </div>
+        <div class="pb hidden" id="pb-disk">
+          <div class="pb-head"><span class="pb-label">Disk</span><span class="pb-pct" id="disk-pct">–</span></div>
           <div class="pb-track"><div class="pb-fill f-red" id="disk-bar"></div></div>
         </div>
-        <div class="pb">
-          <div class="pb-row">
-            <span class="pb-label">Network I/O</span>
-            <span class="pb-pct" id="net-pct">–%</span>
-          </div>
+        <div class="pb hidden" id="pb-net">
+          <div class="pb-head"><span class="pb-label">Network I/O</span><span class="pb-pct" id="net-pct">–</span></div>
           <div class="pb-track"><div class="pb-fill f-amber" id="net-bar"></div></div>
         </div>
       </div>
@@ -490,59 +382,58 @@ footer b{color:var(--teal);font-weight:700}
     <!-- ── Row 2: Deployment + CPU Detail + Activity ── -->
     <div class="grid3">
 
-      <div class="ic">
-        <div class="ic-head"><div class="ic-accent teal"></div>Deployment</div>
-        <div class="row"><span class="rl">Environment</span><span class="rv" id="d-env">–</span></div>
-        <div class="row">
+      <div class="card">
+        <div class="card-head"><div class="card-accent ca-teal"></div><span class="card-title">Deployment</span></div>
+        <div class="row" id="row-env"><span class="rl">Environment</span><span class="rv" id="d-env">–</span></div>
+        <div class="row hidden" id="row-region">
           <span class="rl">Region</span>
           <span class="region-tag" id="d-region">–</span>
         </div>
         <div class="row"><span class="rl">Server Name</span><span class="rv teal"><%= server %></span></div>
-        <div class="row"><span class="rl">Build</span><span class="rv blue" id="d-version">–</span></div>
+        <div class="row hidden" id="row-version"><span class="rl">Build</span><span class="rv blue" id="d-version">–</span></div>
       </div>
 
-      <div class="ic">
-        <div class="ic-head"><div class="ic-accent amber"></div>CPU Detail</div>
-        <div class="row"><span class="rl">Model</span><span class="rv" id="d-cpumodel" style="font-size:11.5px;text-align:right;max-width:56%">–</span></div>
-        <div class="row"><span class="rl">Cores</span><span class="rv" id="d-cores2">–</span></div>
-        <div class="row"><span class="rl">Load 1m</span><span class="rv amber" id="d-load1">–</span></div>
-        <div class="row"><span class="rl">Load 5m</span><span class="rv" id="d-load5">–</span></div>
-        <div class="row"><span class="rl">Load 15m</span><span class="rv" id="d-load15">–</span></div>
+      <div class="card">
+        <div class="card-head"><div class="card-accent ca-amber"></div><span class="card-title">CPU Detail</span></div>
+        <div class="row hidden" id="row-cpumodel">
+          <span class="rl">Model</span>
+          <span class="rv" id="d-cpumodel" style="font-size:11.5px;text-align:right;max-width:58%">–</span>
+        </div>
+        <div class="row" id="row-cores2"><span class="rl">Cores</span><span class="rv" id="d-cores2">–</span></div>
+        <div class="row" id="row-load1"><span class="rl">Load 1m</span><span class="rv amber" id="d-load1">–</span></div>
+        <div class="row hidden" id="row-load5"><span class="rl">Load 5m</span><span class="rv" id="d-load5">–</span></div>
+        <div class="row hidden" id="row-load15"><span class="rl">Load 15m</span><span class="rv" id="d-load15">–</span></div>
       </div>
 
-      <div class="ic">
-        <div class="ic-head"><div class="ic-accent green"></div>Recent Activity</div>
-        <div class="act">
-          <div class="act-ico g">✅</div>
-          <div class="act-body">
-            <div class="act-text">Health check passed</div>
-            <div class="act-sub">All endpoints responding</div>
+      <div class="card">
+        <div class="card-head"><div class="card-accent ca-blue"></div><span class="card-title">Recent Activity</span></div>
+        <div class="act-item">
+          <div class="act-dot" style="background:var(--green)"></div>
+          <div>
+            <div class="act-msg">Dashboard accessed by <strong><%= user %></strong></div>
+            <div class="act-time">just now</div>
           </div>
-          <span class="act-time">just now</span>
         </div>
-        <div class="act">
-          <div class="act-ico t">👤</div>
-          <div class="act-body">
-            <div class="act-text"><%= user %> signed in</div>
-            <div class="act-sub">Session started</div>
+        <div class="act-item">
+          <div class="act-dot" style="background:var(--green)"></div>
+          <div>
+            <div class="act-msg">All services healthy</div>
+            <div class="act-time" id="act-boot-ago">–</div>
           </div>
-          <span class="act-time" id="loginTime">–</span>
         </div>
-        <div class="act">
-          <div class="act-ico g">🔄</div>
-          <div class="act-body">
-            <div class="act-text">Stats API polled</div>
-            <div class="act-sub">Live data active</div>
+        <div class="act-item">
+          <div class="act-dot" style="background:var(--amber)"></div>
+          <div>
+            <div class="act-msg">Memory usage peaked at 58%</div>
+            <div class="act-time">12:30 ago</div>
           </div>
-          <span class="act-time" id="lastPoll">–</span>
         </div>
-        <div class="act">
-          <div class="act-ico a">⚡</div>
-          <div class="act-body">
-            <div class="act-text">Load balancer synced</div>
-            <div class="act-sub">All regions healthy</div>
+        <div class="act-item">
+          <div class="act-dot" style="background:var(--blue)"></div>
+          <div>
+            <div class="act-msg">System boot detected</div>
+            <div class="act-time" id="act-boot-time">–</div>
           </div>
-          <span class="act-time">3m ago</span>
         </div>
       </div>
 
@@ -558,89 +449,265 @@ footer b{color:var(--teal);font-weight:700}
 
 </div><!-- /app -->
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-/* ─── Clock ─── */
-function tick(){
-  document.getElementById('hclock').textContent = new Date().toLocaleTimeString();
+/* ─────────────────────────────────────────────
+   THEME
+───────────────────────────────────────────── */
+const html = document.documentElement;
+let darkMode = false;
+
+function toggleTheme(){
+  darkMode = !darkMode;
+  html.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+  document.getElementById('theme-btn').textContent = darkMode ? '☀️' : '🌙';
+  showToast(darkMode ? 'Dark mode enabled' : 'Light mode enabled', darkMode ? '#3b82f6' : '#f59e0b');
+  updateSparkColors();
 }
+
+/* ─────────────────────────────────────────────
+   CLOCK
+───────────────────────────────────────────── */
+function tick(){ document.getElementById('hclock').textContent = new Date().toLocaleTimeString(); }
 tick(); setInterval(tick, 1000);
 
-/* ─── Login time ─── */
-document.getElementById('loginTime').textContent =
-  new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
-
-/* ─── Toast ─── */
+/* ─────────────────────────────────────────────
+   TOAST
+───────────────────────────────────────────── */
 function showToast(msg, color){
   const t = document.getElementById('toast');
   document.getElementById('toast-msg').textContent = msg;
-  document.getElementById('toast-dot').style.background = color || '#39c5bb';
+  document.getElementById('toast-dot').style.background = color || '#00c9b1';
   t.classList.add('show');
-  setTimeout(()=> t.classList.remove('show'), 3200);
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3200);
 }
 
-/* ─── Refresh button ─── */
+/* ─────────────────────────────────────────────
+   NAV TABS
+───────────────────────────────────────────── */
+// function setTab(el, name){
+//   document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
+//   el.classList.add('active');
+//   showToast('Switched to ' + name.charAt(0).toUpperCase() + name.slice(1), '#00c9b1');
+// }
+
+/* ─────────────────────────────────────────────
+   REFRESH BUTTON
+───────────────────────────────────────────── */
 function triggerRefresh(){
   const ico = document.getElementById('refresh-ico');
   ico.classList.add('spin');
-  fetchStats().finally(()=> setTimeout(()=> ico.classList.remove('spin'), 600));
+  showToast('Refreshing dashboard...', '#00c9b1');
+  fetchStats().finally(() => {
+    setTimeout(() => ico.classList.remove('spin'), 600);
+    document.getElementById('last-update').textContent = 'just now';
+  });
 }
 
-/* ─── Bar helper ─── */
-function setBar(barId, pctId, value, barClass){
-  if(value === null || value === undefined) return;
-  const bar = document.getElementById(barId);
-  const pct = document.getElementById(pctId);
-  bar.style.width = value + '%';
-  pct.textContent = value + '%';
-  pct.className = 'pb-pct' + (value >= 90 ? ' crit-pct' : value >= 75 ? ' warn-pct' : '');
-}
+/* ─────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────── */
+function isValid(v){ return v !== null && v !== undefined && v !== '' && v !== false; }
 
-/* ─── Fetch stats ─── */
-async function fetchStats(){
-  try {
-    const res  = await fetch('/api/stats');
-    const data = await res.json();
-
-    setBar('cpu-bar',  'cpu-pct',  data.cpu);
-    setBar('mem-bar',  'mem-pct',  data.mem);
-    setBar('disk-bar', 'disk-pct', data.disk);
-    setBar('net-bar',  'net-pct',  data.net !== null ? data.net : 0);
-
-    const set = (id, val) => { const el = document.getElementById(id); if(el && val !== undefined) el.textContent = val; };
-
-    set('d-hostname',  data.hostname);
-    set('d-platform',  data.platform + ' / ' + data.arch);
-    set('d-cores',     data.cpuCores + ' cores');
-    set('d-totalmem',  data.totalMem + ' GB');
-    set('d-freemem',   data.freeMem + ' GB free');
-    set('d-osuptime',  data.osUptime);
-    set('s-hostname',  data.hostname);
-    set('s-load',      data.loadAvg[0]);
-    set('s-appuptime', data.appUptime);
-    set('d-cpumodel',  data.cpuModel);
-    set('d-cores2',    data.cpuCores + ' cores');
-    set('d-load1',     data.loadAvg[0]);
-    set('d-load5',     data.loadAvg[1]);
-    set('d-load15',    data.loadAvg[2]);
-    set('d-env',       data.env     || 'production');
-    set('d-region',    data.region  || '–');
-    set('d-version',   data.version || '–');
-    set('f-region',    data.region  || '–');
-    set('f-version',   data.version || '–');
-    set('d-appuptime', data.appUptime);
-
-    document.getElementById('lastPoll').textContent =
-      new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-
-  } catch(e){
-    console.warn('Stats fetch failed:', e);
+function setRow(rowId, elId, val, transform){
+  const row = document.getElementById(rowId);
+  const el  = document.getElementById(elId);
+  if(!el) return;
+  if(isValid(val)){
+    el.textContent = transform ? transform(val) : val;
+    if(row) row.classList.remove('hidden');
+  } else {
+    if(row) row.classList.add('hidden');
   }
 }
 
-fetchStats();
-setInterval(fetchStats, 3000);
+function setText(id, val){
+  const el = document.getElementById(id);
+  if(el && isValid(val)) el.textContent = val;
+}
 
-setTimeout(() => showToast('Welcome back, <%= user %>! Dashboard is live.', '#39c5bb'), 700);
+function setBar(pbId, barId, pctId, value){
+  const pb  = document.getElementById(pbId);
+  const bar = document.getElementById(barId);
+  const pct = document.getElementById(pctId);
+  if(!pb || !bar || !pct) return;
+  if(isValid(value)){
+    const n = parseFloat(value);
+    if(isNaN(n)){ pb.classList.add('hidden'); return; }
+    bar.style.width = n + '%';
+    pct.textContent = n + '%';
+    pct.className = 'pb-pct' + (n >= 90 ? ' crit-pct' : n >= 75 ? ' warn-pct' : '');
+    pb.classList.remove('hidden');
+  } else {
+    pb.classList.add('hidden');
+  }
+}
+
+/* ─────────────────────────────────────────────
+   SPARKLINE CHARTS
+───────────────────────────────────────────── */
+const MAX_HIST = 20;
+const sparkHistory = { cpu: [], mem: [] };
+let cpuChart = null, memChart = null;
+
+function sparkColor(name){
+  return name === 'cpu'
+    ? { border: 'rgba(0,201,177,.75)', bg: 'rgba(0,201,177,.1)' }
+    : { border: 'rgba(16,185,129,.75)', bg: 'rgba(16,185,129,.1)' };
+}
+
+function makeSparkline(canvasId, name){
+  const ctx = document.getElementById(canvasId);
+  if(!ctx) return null;
+  const c = sparkColor(name);
+  return new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: Array(MAX_HIST).fill(''),
+      datasets:[{
+        data: Array(MAX_HIST).fill(null),
+        borderColor: c.border,
+        backgroundColor: c.bg,
+        borderWidth: 1.5,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 0,
+      }]
+    },
+    options:{
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins:{ legend:{ display:false }, tooltip:{ enabled:false } },
+      scales:{
+        x:{ display:false },
+        y:{ display:false, min:0, max:100 }
+      },
+      animation:{ duration: 300 }
+    }
+  });
+}
+
+function updateSparkline(chart, name, newVal){
+  if(!chart) return;
+  sparkHistory[name].push(newVal);
+  if(sparkHistory[name].length > MAX_HIST) sparkHistory[name].shift();
+  const padded = Array(MAX_HIST - sparkHistory[name].length).fill(null).concat(sparkHistory[name]);
+  chart.data.datasets[0].data = padded;
+  chart.update('none');
+}
+
+function updateSparkColors(){
+  ['cpu','mem'].forEach(name => {
+    const chart = name === 'cpu' ? cpuChart : memChart;
+    if(!chart) return;
+    const c = sparkColor(name);
+    chart.data.datasets[0].borderColor = c.border;
+    chart.data.datasets[0].backgroundColor = c.bg;
+    chart.update('none');
+  });
+}
+
+/* ─────────────────────────────────────────────
+   ANIMATED LOAD BARS
+───────────────────────────────────────────── */
+function animateLoadBars(){
+  document.querySelectorAll('#load-bars .lb').forEach(b => {
+    b.style.height = (30 + Math.random() * 60) + '%';
+  });
+}
+setInterval(animateLoadBars, 2500);
+
+/* ─────────────────────────────────────────────
+   FETCH STATS FROM /api/stats
+───────────────────────────────────────────── */
+async function fetchStats(){
+  try {
+    const res = await fetch('/api/stats');
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const d = await res.json();
+
+    /* Top cards */
+    if(isValid(d.hostname))  setText('s-hostname', d.hostname);
+    if(isValid(d.platform) || isValid(d.arch)) setText('s-platform', [d.platform, d.arch].filter(isValid).join(' / '));
+    if(isValid(d.appUptime)) setText('s-appuptime', d.appUptime);
+    if(isValid(d.osUptime))  setText('s-osuptime',  d.osUptime);
+    if(isValid(d.cpuCores))  setText('s-load-sub',  d.cpuCores + ' cores');
+    if(isValid(d.loadAvg) && Array.isArray(d.loadAvg) && isValid(d.loadAvg[0])){
+      setText('s-load', d.loadAvg[0]);
+    }
+
+    /* Server Information */
+    setRow('row-hostname',  'd-hostname',  d.hostname);
+    const platform = [d.platform, d.arch].filter(isValid).join(' / ');
+    setRow('row-platform',  'd-platform',  platform || null);
+    setRow('row-cores',     'd-cores',     d.cpuCores,  v => v + ' cores');
+    setRow('row-totalmem',  'd-totalmem',  d.totalMem,  v => v + ' GB');
+    setRow('row-freemem',   'd-freemem',   d.freeMem,   v => v + ' GB free');
+    setRow('row-osuptime2', 'd-osuptime',  d.osUptime);
+
+    /* Resource bars + sparklines */
+    setBar('pb-cpu',  'cpu-bar',  'cpu-pct',  d.cpu);
+    setBar('pb-mem',  'mem-bar',  'mem-pct',  d.mem);
+    setBar('pb-disk', 'disk-bar', 'disk-pct', isValid(d.disk) && d.disk !== 0 ? d.disk : null);
+    setBar('pb-net',  'net-bar',  'net-pct',  isValid(d.net)  && d.net  !== 0 ? d.net  : null);
+    if(isValid(d.cpu)) updateSparkline(cpuChart, 'cpu', parseFloat(d.cpu));
+    if(isValid(d.mem)) updateSparkline(memChart, 'mem', parseFloat(d.mem));
+
+    /* Deployment */
+    setRow('row-env',     'd-env',     d.env);
+    setRow('row-region',  'd-region',  d.region);
+    setRow('row-version', 'd-version', d.version);
+    if(isValid(d.region))  setText('f-region',  d.region);
+    if(isValid(d.version)) setText('f-version', d.version);
+
+    /* CPU Detail */
+    setRow('row-cpumodel', 'd-cpumodel', d.cpuModel);
+    setRow('row-cores2',   'd-cores2',   d.cpuCores, v => v + ' cores');
+    if(isValid(d.loadAvg) && Array.isArray(d.loadAvg)){
+      setRow('row-load1',  'd-load1',  isValid(d.loadAvg[0]) ? d.loadAvg[0] : null);
+      setRow('row-load5',  'd-load5',  isValid(d.loadAvg[1]) ? d.loadAvg[1] : null);
+      setRow('row-load15', 'd-load15', isValid(d.loadAvg[2]) ? d.loadAvg[2] : null);
+    }
+
+    /* OS Uptime → activity timestamps */
+    if(isValid(d.osUptime)){
+      setText('act-boot-ago',  d.osUptime + ' ago');
+      setText('act-boot-time', d.osUptime + ' ago');
+    }
+
+    /* Alert banner */
+    const cpu = parseFloat(d.cpu) || 0;
+    const mem = parseFloat(d.mem) || 0;
+    const banner = document.getElementById('alert-banner');
+    if(banner && banner.style.display !== 'none'){
+      if(cpu >= 90 || mem >= 90){
+        banner.style.cssText = 'background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.25);color:var(--red)';
+        setText('alert-text', '⚠️ High resource usage — CPU ' + cpu + '%, Memory ' + mem + '%');
+      } else {
+        banner.style.cssText = '';
+        setText('alert-text', 'All systems nominal — CPU at ' + cpu + '%, memory at ' + mem + '%. No anomalies detected.');
+      }
+    }
+
+  } catch(e){
+    console.warn('Stats fetch failed:', e.message);
+    setText('alert-text', 'Could not reach /api/stats — check server connection.');
+  }
+
+  document.getElementById('last-update').textContent = 'just now';
+}
+
+/* ─────────────────────────────────────────────
+   BOOT
+───────────────────────────────────────────── */
+window.addEventListener('DOMContentLoaded', () => {
+  cpuChart = makeSparkline('cpu-spark', 'cpu');
+  memChart = makeSparkline('mem-spark', 'mem');
+  fetchStats();
+  setInterval(fetchStats, 3000);
+  setTimeout(() => showToast('Welcome back, <%= user %>! Dashboard is live.', '#00c9b1'), 700);
+});
 </script>
 </body>
 </html>
